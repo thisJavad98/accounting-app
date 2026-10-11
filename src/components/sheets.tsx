@@ -13,7 +13,7 @@ export function Sheets() {
   return (
     <AnimatePresence>
       {sheet?.type === "add" && <AddChooser key="add" />}
-      {sheet?.type === "sms" && <SmsSheet key="sms" initialText={sheet.text} />}
+      {sheet?.type === "sms" && <SmsSheet key="sms" />}
       {sheet?.type === "calendar" && <CalendarSheet key="calendar" />}
       {sheet?.type === "confirm" && <ConfirmSmsSheet key={`confirm-${sheet.tx.id}`} tx={sheet.tx} sms={sheet.sms} />}
       {sheet?.type === "tx" && (
