@@ -20,7 +20,17 @@ function defaultTimestamp(day: string) {
   return date.getTime();
 }
 
-function SmsDetails({ tx, parsed, sms }: { tx: Transaction; parsed: ParsedSms | null; sms?: string }) {
+export function SmsDetails({
+  tx,
+  parsed,
+  sms,
+  showOriginal = false,
+}: {
+  tx: Transaction;
+  parsed: ParsedSms | null;
+  sms?: string;
+  showOriginal?: boolean;
+}) {
   const { t, settings } = useStore();
   const locale = settings.locale;
   const unit = t.currencies[settings.currency];
@@ -52,7 +62,7 @@ function SmsDetails({ tx, parsed, sms }: { tx: Transaction; parsed: ParsedSms | 
         </dl>
       )}
       {sms && (
-        <details className="text-sm">
+        <details className="text-sm" open={showOriginal}>
           <summary className="cursor-pointer select-none opacity-80">{t.form.original}</summary>
           <p dir="auto" className="mt-2 whitespace-pre-line leading-relaxed opacity-90">
             {sms}

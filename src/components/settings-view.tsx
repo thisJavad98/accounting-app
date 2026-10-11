@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Check,
-  Copy,
+  AppleLogo,
+  CaretRight,
   Desktop,
   DeviceMobile,
   DownloadSimple,
@@ -14,11 +14,11 @@ import {
   Warning,
   type Icon,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { exportJson, parseBackup, STORAGE_CAPACITY, storageUsed } from "@/lib/cookie-store";
 import { dayKey, fromDayKey, todayKey } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
-import { SHORTCUT_URL } from "@/lib/site";
 import type { Currency, Locale, Theme, Transaction } from "@/lib/types";
 import type { Dictionary } from "@/lib/i18n";
 import { LogoMark } from "./logo";
@@ -117,26 +117,14 @@ function InstallCard() {
 
 export function SettingsView() {
   const { t, settings, transactions, setLocale, setCurrency, setTheme, replaceAll, notify } = useStore();
-  const [copied, setCopied] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = settings.locale;
 
-  const shortcutUrl = SHORTCUT_URL;
   // Recomputed whenever transactions change, since every change rewrites the cookies.
   const used = useMemo(() => (transactions ? storageUsed() : 0), [transactions]);
   const ratio = used / STORAGE_CAPACITY;
   const kb = (bytes: number) => formatNumber(Math.round((bytes / 1024) * 10) / 10, locale);
-
-  async function copyUrl() {
-    try {
-      await navigator.clipboard.writeText(shortcutUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      notify(shortcutUrl);
-    }
-  }
 
   function downloadBackup() {
     download(`dakhl-backup-${todayKey()}.json`, exportJson(transactions), "application/json");
@@ -226,34 +214,20 @@ export function SettingsView() {
         <div className="flex flex-col gap-4 rounded-2xl bg-sunken p-4 text-sm leading-relaxed">
           <p className="font-medium">{t.settings.smsAuto}</p>
           <p>{t.settings.smsAndroid}</p>
-          <div className="flex flex-col gap-2.5">
-            <p className="font-semibold">{t.settings.smsIos}</p>
-            <ol className="flex flex-col gap-2">
-              {t.settings.smsIosSteps.map((step, i) => (
-                <li key={i} className="flex gap-2.5">
-                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-brand-ink tabular-nums">
-                    {formatNumber(i + 1, locale)}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-surface p-1.5 ps-3">
-            <code dir="ltr" className="min-w-0 flex-1 text-start font-mono text-xs break-all">
-              {shortcutUrl}
-              <span className="text-brand-ink">[URL Encoded Text]</span>
-            </code>
-            <button
-              type="button"
-              onClick={copyUrl}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-bold text-on-brand active:scale-95"
-            >
-              {copied ? <Check size={14} weight="bold" aria-hidden /> : <Copy size={14} aria-hidden />}
-              {copied ? t.settings.copied : t.settings.copy}
-            </button>
-          </div>
-          <p className="text-muted">{t.settings.smsIosNote}</p>
+          <p>{t.settings.smsIos}</p>
+          <Link
+            href="/app/settings/sms-ios"
+            className="flex items-center gap-3 rounded-xl bg-surface p-3 active:scale-[0.99]"
+          >
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+              <AppleLogo size={22} weight="fill" aria-hidden />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="font-bold">{t.settings.smsIosGuide}</span>
+              <span className="text-xs text-muted">{t.settings.smsIosGuideHint}</span>
+            </span>
+            <CaretRight size={18} weight="bold" className="shrink-0 text-faint rtl:rotate-180" aria-hidden />
+          </Link>
         </div>
       </Section>
 

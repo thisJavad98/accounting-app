@@ -29,6 +29,7 @@ export type Sheet =
   | { type: "sms" }
   | { type: "calendar" }
   | { type: "tx"; id: string | null; sms?: string }
+  | { type: "confirm"; tx: Transaction; sms: string }
   | null;
 
 type Toast = { id: number; message: string; tone: "neutral" | "error" };
@@ -51,7 +52,10 @@ type StoreValue = {
   saveTransaction: (tx: Transaction) => boolean;
   deleteTransaction: (id: string) => void;
   replaceAll: (txs: Transaction[]) => boolean;
-  ingestSms: (raw: string) => boolean;
+  /** Shows a parsed bank SMS for confirmation; nothing is saved until `confirmSms`. */
+  receiveSms: (raw: string) => boolean;
+  confirmSms: (tx: Transaction) => void;
+  rejectSms: () => void;
 };
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -79,6 +83,13 @@ function smsToTransaction(raw: string, currency: Currency): Transaction | null {
   };
 }
 
+/** The same SMS handed over twice (link and clipboard) parses to the same timestamp, so it is matched exactly. */
+function findSame(transactions: Transaction[], tx: Transaction) {
+  return transactions.find(
+    (item) => item.at === tx.at && item.amount === tx.amount && item.kind === tx.kind && item.bank === tx.bank,
+  );
+}
+
 /** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=`). */
 function readIncomingSms(): string | null {
   const params = new URLSearchParams(location.search);
@@ -90,6 +101,7 @@ type InitialState = {
   transactions: Transaction[];
   sheet: Sheet;
   incoming: boolean;
+  duplicate: boolean;
 };
 
 function createInitialState(): InitialState {
@@ -97,15 +109,14 @@ function createInitialState(): InitialState {
   const transactions = loadTransactions();
   const raw = readIncomingSms();
   const tx = raw ? smsToTransaction(raw, settings.currency) : null;
-  if (raw && tx) {
-    return {
-      settings,
-      transactions: [...transactions, tx],
-      sheet: { type: "tx", id: tx.id, sms: raw },
-      incoming: true,
-    };
+  const same = tx && findSame(transactions, tx);
+  if (raw && same) {
+    return { settings, transactions, sheet: null, incoming: true, duplicate: true };
   }
-  return { settings, transactions, sheet: raw ? { type: "sms" } : null, incoming: !!raw };
+  if (raw && tx) {
+    return { settings, transactions, sheet: { type: "confirm", tx, sms: raw }, incoming: true, duplicate: false };
+  }
+  return { settings, transactions, sheet: raw ? { type: "sms" } : null, incoming: !!raw, duplicate: false };
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -116,14 +127,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState(initial.transactions);
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
   const [sheet, setSheet] = useState<Sheet>(initial.sheet);
-  const [toast, setToast] = useState<Toast | null>(null);
+  const [toast, setToast] = useState<Toast | null>(() =>
+    initial.duplicate
+      ? { id: 0, message: dictionaries[initial.settings.locale].confirmSms.duplicate, tone: "neutral" }
+      : null,
+  );
   const toastId = useRef(0);
 
   const t = dictionaries[settings.locale];
 
   useEffect(() => {
     if (!initial.incoming) return;
-    saveTransactions(initial.transactions);
     const url = new URL(location.href);
     url.searchParams.delete("sms");
     url.searchParams.delete("text");
@@ -200,17 +214,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [commit],
   );
 
-  const ingestSms = useCallback(
+  const receiveSms = useCallback(
     (raw: string) => {
       const tx = smsToTransaction(raw, settings.currency);
       if (!tx) return false;
-      if (!commit([...transactions, tx])) return true;
-      setSelectedDay(dayKey(new Date(tx.at)));
-      setSheet({ type: "tx", id: tx.id, sms: raw });
+      const same = findSame(transactions, tx);
+      if (same) {
+        setSelectedDay(dayKey(new Date(same.at)));
+        setSheet(null);
+        notify(t.confirmSms.duplicate);
+      } else {
+        setSheet({ type: "confirm", tx, sms: raw });
+      }
       return true;
     },
-    [commit, settings.currency, transactions],
+    [notify, settings.currency, t, transactions],
   );
+
+  const confirmSms = useCallback(
+    (tx: Transaction) => {
+      if (!commit([...transactions, tx])) return;
+      setSelectedDay(dayKey(new Date(tx.at)));
+      setSheet(null);
+      notify(t.toast.saved);
+    },
+    [commit, notify, t, transactions],
+  );
+
+  const rejectSms = useCallback(() => {
+    setSheet(null);
+    notify(t.confirmSms.rejected);
+  }, [notify, t]);
 
   const value = useMemo<StoreValue>(
     () => ({
@@ -231,7 +265,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       saveTransaction,
       deleteTransaction,
       replaceAll,
-      ingestSms,
+      receiveSms,
+      confirmSms,
+      rejectSms,
     }),
     [
       t,
@@ -245,7 +281,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       saveTransaction,
       deleteTransaction,
       replaceAll,
-      ingestSms,
+      receiveSms,
+      confirmSms,
+      rejectSms,
     ],
   );
 

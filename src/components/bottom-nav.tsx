@@ -33,7 +33,7 @@ export function BottomNav() {
       >
         <ul className="grid grid-cols-3">
           {items.map(({ href, label, icon: Glyph }) => {
-            const active = pathname === href;
+            const active = pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
             return (
               <li key={href}>
                 <Link

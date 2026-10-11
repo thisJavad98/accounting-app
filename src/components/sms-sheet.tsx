@@ -7,13 +7,13 @@ import { useStore } from "./store";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 
 export function SmsSheet() {
-  const { t, closeSheet, ingestSms } = useStore();
+  const { t, closeSheet, receiveSms } = useStore();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const fieldId = useId();
 
   function submit(raw: string) {
-    if (!ingestSms(raw)) setError(t.sms.notFound);
+    if (!receiveSms(raw)) setError(t.sms.notFound);
   }
 
   async function pasteFromClipboard() {

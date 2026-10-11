@@ -1,6 +1,6 @@
 // Network-first cache so the app opens offline. Data lives in cookies, not here.
-const CACHE = "dakhl-v2";
-const SHELL = ["/app", "/app/month", "/app/settings", "/", "/icon.svg", "/icons/192", "/icons/512"];
+const CACHE = "dakhl-v3";
+const SHELL = ["/app", "/app/month", "/app/settings", "/app/settings/sms-ios", "/", "/icon.svg", "/icons/192", "/icons/512"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

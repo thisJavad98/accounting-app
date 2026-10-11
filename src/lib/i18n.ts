@@ -57,6 +57,8 @@ const fa = {
     read: "خواندن پیامک",
     notFound: "مبلغی در این متن پیدا نشد. متن کامل پیامک را بچسبانید.",
     clipboardDenied: "دسترسی به کلیپ‌بورد داده نشد. متن را دستی بچسبانید.",
+    clipboardOffer: "پیامک بانک تازه رسیده؟",
+    clipboardPaste: "چسباندن",
     placeholder: "برداشت: ۱,۲۵۰,۰۰۰\nمانده: ۳,۴۰۰,۰۰۰",
   },
   form: {
@@ -99,14 +101,9 @@ const fa = {
     currencyHelper: "مبالغ قبلی تبدیل نمی‌شوند. پیامک‌های ریالی هنگام انتخاب تومان خودکار تبدیل می‌شوند.",
     smsTitle: "اتصال پیامک بانک",
     smsAndroid: "اندروید: برنامه را از منوی مرورگر «نصب» کنید. سپس روی پیامک بانک نگه دارید، «اشتراک‌گذاری» را بزنید و دخل را انتخاب کنید.",
-    smsIos: "آیفون، با برنامه Shortcuts:",
-    smsIosSteps: [
-      "برنامه Shortcuts را باز کنید، به زبانه Automation بروید و «New Automation» را بزنید.",
-      "گزینه Message را انتخاب کنید، در Sender بانک خود را بگذارید و «Run Immediately» را روشن کنید.",
-      "اکشن «URL Encode» را اضافه کنید و ورودی آن را Message قرار دهید.",
-      "اکشن «Open URLs» را اضافه کنید، آدرس زیر را در آن بچسبانید و بلافاصله بعد از آن متغیر «URL Encoded Text» را بگذارید.",
-    ],
-    smsIosNote: "از این به بعد با هر پیامک بانک، دخل باز می‌شود و فقط عنوان را می‌پرسد.",
+    smsIos: "آیفون: با برنامه Shortcuts کاری کنید که هر پیامک بانک خودکار دخل را باز کند.",
+    smsIosGuide: "راهنمای تصویری آیفون",
+    smsIosGuideHint: "مخصوص iOS 27، حدود دو دقیقه",
     smsAuto: "مبلغ، نوع، بانک، موجودی، تاریخ و ساعت شمسی، شماره حساب و یک عنوان پیشنهادی خودکار از متن پیامک خوانده می‌شود.",
     install: "نصب برنامه",
     installBody: "دخل را روی صفحه اصلی گوشی نصب کنید تا مثل یک برنامه باز شود، بدون اینترنت هم کار کند و پیامک بانک را مستقیم به آن بفرستید.",
@@ -128,6 +125,72 @@ const fa = {
     clearConfirm: "همه تراکنش‌ها برای همیشه پاک می‌شوند. مطمئنید؟",
     cleared: "همه اطلاعات پاک شد",
     nearlyFull: "فضای کوکی رو به اتمام است. یک پشتیبان بگیرید و ماه‌های قدیمی را پاک کنید.",
+  },
+  smsGuide: {
+    title: "اتصال پیامک بانک در آیفون",
+    intro:
+      "آیفون اجازه نمی‌دهد برنامه‌ها پیامک را بخوانند، اما برنامه Shortcuts که روی هر آیفونی نصب است می‌تواند با هر پیامک بانک، دخل نصب‌شده روی صفحه اصلی را باز کند. این راهنما برای iOS 27 است. اول دخل را از تنظیمات به صفحه اصلی اضافه کنید، بعد یک بار این قدم‌ها را انجام دهید.",
+    back: "تنظیمات",
+    step: (n: string) => `قدم ${n}`,
+    steps: [
+      {
+        title: "Library را باز کنید",
+        body: "برنامه Shortcuts را باز کنید، پایین صفحه «Library» را بزنید و بعد «Automation» را انتخاب کنید.",
+      },
+      {
+        title: "یک Automation تازه بسازید",
+        body: "دکمه + بالای صفحه را بزنید.",
+      },
+      {
+        title: "به ویرایشگر بروید",
+        body: "اگر صفحه «Describe a Shortcut» باز شد، بالای صفحه «Edit» را بزنید تا خودتان قدم‌ها را بچینید.",
+      },
+      {
+        title: "تریگر Message را اضافه کنید",
+        body: "در کتابخانه اکشن‌های پایین صفحه، دسته «Automation» را بزنید و «Message» را انتخاب کنید. این تریگر همیشه بالای Shortcut قرار می‌گیرد.",
+      },
+      {
+        title: "پیامک‌های بانک را مشخص کنید",
+        body: "در تریگر «When I receive a message»، گزینه Sender را به «Message» تغییر دهید و کلمه «مانده» را بنویسید؛ تقریبا همه پیامک‌های بانک این کلمه را دارند. بعد فلش کنار تریگر را بزنید و «Confirm Before Run» را خاموش کنید.",
+      },
+      {
+        title: "دو اکشن Copy to Clipboard و URL Encode",
+        body: "در کادر جست‌وجوی پایین صفحه «Copy to Clipboard» را بنویسید و اضافه کنید، بعد «URL Encode» را هم اضافه کنید. ورودی هر دو باید «Shortcut Input» باشد.",
+      },
+      {
+        title: "اکشن Open URLs را اضافه کنید",
+        body: "اکشن «Open URLs» را هم اضافه کنید. آدرس زیر را کپی و داخل آن بچسبانید؛ با ‎webapp://‎ شروع می‌شود تا به جای سافاری خود برنامه دخل باز شود. بعد بدون فاصله از نوار بالای کیبورد متغیر «URL Encoded Text» را بزنید و در آخر دکمه تیک آبی بالای صفحه را بزنید.",
+      },
+      {
+        title: "تمام شد",
+        body: "از این به بعد با رسیدن هر پیامک بانک، برنامه دخل باز می‌شود. اگر پیامک را مستقیم نشان نداد، «چسباندن» بالای صفحه و بعد «Paste» آیفون را بزنید. دخل مبلغ و بانک را خودش می‌خواند و فقط عنوان را می‌پرسد.",
+      },
+    ],
+    linkLabel: "آدرس دخل برای Open URLs",
+    troubleTitle: "کار نکرد؟",
+    trouble: [
+      "از Sender استفاده نکنید: فقط مخاطبان Contacts را نشان می‌دهد و شماره‌های کوتاه بانک در آن نیستند. «Message» با کلمه «مانده» مطمئن‌تر است.",
+      "اگر بانک شما به جای «مانده» کلمه «موجودی» می‌نویسد، یک تریگر Message دیگر با این کلمه به همان Shortcut اضافه کنید. در iOS 27 یک Shortcut می‌تواند چند تریگر داشته باشد.",
+      "اگر قبل از اجرا سؤال می‌پرسد، فلش کنار تریگر را بزنید و مطمئن شوید «Confirm Before Run» خاموش است.",
+      "اگر برنامه دیگری باز شد یا آیفون گفت آدرس نامعتبر است، مطمئن شوید دخل را از سافاری و از همین سایت به صفحه اصلی اضافه کرده‌اید. اگر باز هم نشد، به جای webapp://‎ همان آدرس را با https://‎ بنویسید؛ آن وقت پیامک در سافاری باز می‌شود که داده‌هایش از برنامه نصب‌شده جداست.",
+      "اگر یک پیامک را دو بار چسباندید، دخل آن را دوباره ثبت نمی‌کند و همان مورد قبلی را باز می‌کند.",
+    ],
+    olderTitle: "iOS 26 یا قدیمی‌تر دارید؟",
+    older:
+      "زبانه «Automation» را بزنید، + و بعد «Message» را انتخاب کنید، در «Message Contains» کلمه «مانده» را بنویسید، «Run Immediately» را انتخاب کنید، «Next» و بعد «New Blank Automation» را بزنید. سپس قدم‌های ۶ و ۷ را انجام دهید.",
+    mock: {
+      sender: "بانک",
+      keyword: "مانده",
+      sms: "برداشت: ۱,۲۵۰,۰۰۰\nمانده: ۳,۴۰۰,۰۰۰",
+    },
+  },
+  confirmSms: {
+    title: "پیامک بانک رسید",
+    body: "اطلاعات خوانده‌شده را بررسی کنید. فقط با تأیید شما ثبت می‌شود.",
+    accept: "تأیید و ثبت",
+    reject: "رد کردن",
+    rejected: "پیامک رد شد و ثبت نشد",
+    duplicate: "این پیامک قبلا ثبت شده است",
   },
   toast: {
     saved: "ذخیره شد",
@@ -217,6 +280,8 @@ const en: Dictionary = {
     read: "Read SMS",
     notFound: "No amount found in this text. Paste the full SMS.",
     clipboardDenied: "Clipboard access was blocked. Paste the text by hand.",
+    clipboardOffer: "Just got a bank SMS?",
+    clipboardPaste: "Paste",
     placeholder: "Debited: 1,250,000\nBalance: 3,400,000",
   },
   form: {
@@ -259,14 +324,9 @@ const en: Dictionary = {
     currencyHelper: "Existing amounts are not converted. Rial SMS amounts convert automatically when Toman is selected.",
     smsTitle: "Connect bank SMS",
     smsAndroid: "Android: install the app from the browser menu. Then long-press a bank SMS, tap Share and pick Dakhl.",
-    smsIos: "iPhone, with the Shortcuts app:",
-    smsIosSteps: [
-      "Open Shortcuts, go to the Automation tab and tap New Automation.",
-      "Pick Message, set Sender to your bank and turn on Run Immediately.",
-      "Add the URL Encode action and set its input to Message.",
-      "Add the Open URLs action, paste the link below, then insert the URL Encoded Text variable right after it.",
-    ],
-    smsIosNote: "From then on every bank SMS opens Dakhl and only asks for a title.",
+    smsIos: "iPhone: use the Shortcuts app so every bank SMS opens Dakhl automatically.",
+    smsIosGuide: "iPhone guide with pictures",
+    smsIosGuideHint: "For iOS 27, about two minutes",
     smsAuto: "Amount, direction, bank, balance, Persian or Gregorian date and time, account digits and a suggested title are read from the SMS automatically.",
     install: "Install the app",
     installBody: "Add Dakhl to your home screen so it opens like an app, works offline and can receive bank SMS directly.",
@@ -288,6 +348,72 @@ const en: Dictionary = {
     clearConfirm: "All transactions will be erased for good. Are you sure?",
     cleared: "All data erased",
     nearlyFull: "Cookie storage is almost full. Download a backup and remove old months.",
+  },
+  smsGuide: {
+    title: "Connect bank SMS on iPhone",
+    intro:
+      "iPhone doesn't let apps read your messages, but the built-in Shortcuts app can open your installed Dakhl app with every bank SMS. This guide is for iOS 27. First add Dakhl to your Home Screen from Settings, then follow these steps once.",
+    back: "Settings",
+    step: (n) => `Step ${n}`,
+    steps: [
+      {
+        title: "Open your Library",
+        body: "Open the Shortcuts app, tap Library at the bottom, then choose Automation.",
+      },
+      {
+        title: "Start a new automation",
+        body: "Tap the + button at the top.",
+      },
+      {
+        title: "Go to the editor",
+        body: "If the Describe a Shortcut screen opens, tap Edit at the top so you can build the steps yourself.",
+      },
+      {
+        title: "Add the Message trigger",
+        body: "In the action library at the bottom, tap the Automation category and pick Message. The trigger always sits at the top of the shortcut.",
+      },
+      {
+        title: "Match your bank's texts",
+        body: "In the When I receive a message trigger, change Sender to Message and type مانده (\"balance\"), which almost every Iranian bank SMS includes. Then tap the arrow beside the trigger and turn off Confirm Before Run.",
+      },
+      {
+        title: "Add Copy to Clipboard and URL Encode",
+        body: "Type Copy to Clipboard in the search field at the bottom and add it, then add URL Encode too. Both should take Shortcut Input.",
+      },
+      {
+        title: "Add the Open URLs action",
+        body: "Add the Open URLs action too. Copy the link below and paste it in. It starts with webapp:// so the installed Dakhl app opens instead of Safari. Then, with no space, tap the URL Encoded Text variable above the keyboard, and finally tap the blue checkmark at the top.",
+      },
+      {
+        title: "You're done",
+        body: "From now on every bank SMS opens the Dakhl app. If it doesn't show the SMS right away, tap Paste at the top, then the iPhone's Paste button. Dakhl reads the amount and bank for you and only asks for a title.",
+      },
+    ],
+    linkLabel: "Dakhl link for Open URLs",
+    troubleTitle: "Not working?",
+    trouble: [
+      "Skip Sender: it only lists people in Contacts, and bank short numbers aren't there. Message with the word مانده is more reliable.",
+      "If your bank writes موجودی instead of مانده, add a second Message trigger with that word to the same shortcut. In iOS 27 one shortcut can have several triggers.",
+      "If it asks before running, tap the arrow beside the trigger and make sure Confirm Before Run is off.",
+      "If another app opens or iPhone says the address is invalid, make sure you added Dakhl to the Home Screen from Safari on this site. If it still fails, use the same link with https:// instead of webapp://. It then opens in Safari, which keeps its data separate from the installed app.",
+      "Pasted the same SMS twice? Dakhl won't log it again; it opens the existing entry.",
+    ],
+    olderTitle: "On iOS 26 or earlier?",
+    older:
+      "Open the Automation tab, tap + and pick Message, type مانده in Message Contains, choose Run Immediately, tap Next, then New Blank Automation. Then follow steps 6 and 7.",
+    mock: {
+      sender: "Bank",
+      keyword: "مانده",
+      sms: "Debited: 1,250,000\nBalance: 3,400,000",
+    },
+  },
+  confirmSms: {
+    title: "Bank SMS received",
+    body: "Check what was read from it. Nothing is saved until you confirm.",
+    accept: "Confirm",
+    reject: "Reject",
+    rejected: "SMS rejected, nothing was saved",
+    duplicate: "This SMS is already saved",
   },
   toast: {
     saved: "Saved",
