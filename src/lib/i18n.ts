@@ -173,18 +173,18 @@ const fa = {
     troubleTitle: "کار نکرد؟",
     trouble: [
       "اگر «چسباندن» چیزی نیاورد، یعنی اکشن «Copy to Clipboard» در Shortcut نیست یا ورودی آن «Shortcut Input» نیست. Shortcut را باز کنید و مطمئن شوید این اکشن هست و قبل از «URL Encode» قرار دارد.",
-      "از Sender استفاده نکنید: فقط مخاطبان Contacts را نشان می‌دهد و شماره‌های کوتاه بانک در آن نیستند. «Message» با کلمه «مانده» مطمئن‌تر است.",
-      "اگر بانک شما به جای «مانده» کلمه «موجودی» می‌نویسد، یک تریگر Message دیگر با این کلمه به همان Shortcut اضافه کنید. در iOS 27 یک Shortcut می‌تواند چند تریگر داشته باشد.",
+      "از Sender استفاده نکنید: فقط مخاطبان Contacts را نشان می‌دهد و شماره‌های کوتاه بانک در آن نیستند. «Message» با کلمه «ریال» مطمئن‌تر است.",
+      "اگر بانک شما مبلغ‌ها را به تومان می‌نویسد، یک تریگر Message دیگر با کلمه «تومان» به همان Shortcut اضافه کنید. در iOS 27 یک Shortcut می‌تواند چند تریگر داشته باشد.",
       "اگر قبل از اجرا سؤال می‌پرسد، فلش کنار تریگر را بزنید و مطمئن شوید «Confirm Before Run» خاموش است.",
       "اگر برنامه دیگری باز شد یا آیفون گفت آدرس نامعتبر است، مطمئن شوید دخل را از سافاری و از همین سایت به صفحه اصلی اضافه کرده‌اید. اگر باز هم نشد، به جای webapp://‎ همان آدرس را با https://‎ بنویسید؛ آن وقت پیامک در سافاری باز می‌شود که داده‌هایش از برنامه نصب‌شده جداست.",
       "اگر یک پیامک را دو بار چسباندید، دخل آن را دوباره ثبت نمی‌کند و همان مورد قبلی را باز می‌کند.",
     ],
     olderTitle: "iOS 26 یا قدیمی‌تر دارید؟",
     older:
-      "زبانه «Automation» را بزنید، + و بعد «Message» را انتخاب کنید، در «Message Contains» کلمه «مانده» را بنویسید، «Run Immediately» را انتخاب کنید، «Next» و بعد «New Blank Automation» را بزنید. سپس قدم‌های ۶ و ۷ را انجام دهید.",
+      "زبانه «Automation» را بزنید، + و بعد «Message» را انتخاب کنید، در «Message Contains» کلمه «ریال» را بنویسید، «Run Immediately» را انتخاب کنید، «Next» و بعد «New Blank Automation» را بزنید. سپس قدم‌های ۶ و ۷ را انجام دهید.",
     mock: {
       sender: "بانک",
-      keyword: "مانده",
+      keyword: "ریال",
       sms: "برداشت: ۱,۲۵۰,۰۰۰\nمانده: ۳,۴۰۰,۰۰۰",
     },
   },
@@ -382,7 +382,7 @@ const en: Dictionary = {
       },
       {
         title: "Match your bank's texts",
-        body: "In the When I receive a message trigger, change Sender to Message and type مانده (\"balance\"), which almost every Iranian bank SMS includes. Then tap the arrow beside the trigger and turn off Confirm Before Run.",
+        body: "In the When I receive a message trigger, change Sender to Message and type ریال (\"rial\"), which almost every Iranian bank SMS includes. Then tap the arrow beside the trigger and turn off Confirm Before Run.",
       },
       {
         title: "Add Copy to Clipboard and URL Encode",
@@ -401,18 +401,18 @@ const en: Dictionary = {
     troubleTitle: "Not working?",
     trouble: [
       "If Paste brings nothing, your shortcut has no Copy to Clipboard action, or its input is not Shortcut Input. Open the shortcut and make sure that action is there, before URL Encode.",
-      "Skip Sender: it only lists people in Contacts, and bank short numbers aren't there. Message with the word مانده is more reliable.",
-      "If your bank writes موجودی instead of مانده, add a second Message trigger with that word to the same shortcut. In iOS 27 one shortcut can have several triggers.",
+      "Skip Sender: it only lists people in Contacts, and bank short numbers aren't there. Message with the word ریال is more reliable.",
+      "If your bank writes amounts in tomans, add a second Message trigger with the word تومان to the same shortcut. In iOS 27 one shortcut can have several triggers.",
       "If it asks before running, tap the arrow beside the trigger and make sure Confirm Before Run is off.",
       "If another app opens or iPhone says the address is invalid, make sure you added Dakhl to the Home Screen from Safari on this site. If it still fails, use the same link with https:// instead of webapp://. It then opens in Safari, which keeps its data separate from the installed app.",
       "Pasted the same SMS twice? Dakhl won't log it again; it opens the existing entry.",
     ],
     olderTitle: "On iOS 26 or earlier?",
     older:
-      "Open the Automation tab, tap + and pick Message, type مانده in Message Contains, choose Run Immediately, tap Next, then New Blank Automation. Then follow steps 6 and 7.",
+      "Open the Automation tab, tap + and pick Message, type ریال in Message Contains, choose Run Immediately, tap Next, then New Blank Automation. Then follow steps 6 and 7.",
     mock: {
       sender: "Bank",
-      keyword: "مانده",
+      keyword: "ریال",
       sms: "Debited: 1,250,000\nBalance: 3,400,000",
     },
   },
