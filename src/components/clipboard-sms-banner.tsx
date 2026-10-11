@@ -29,11 +29,18 @@ export function ClipboardSmsBanner() {
 
   useEffect(() => {
     if (!isIosWebApp()) return;
+    const arm = () => setShownAt(Date.now());
     const onVisible = () => {
-      if (document.visibilityState === "visible") setShownAt(Date.now());
+      if (document.visibilityState === "visible") arm();
     };
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", arm);
+    window.addEventListener("pageshow", arm);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", arm);
+      window.removeEventListener("pageshow", arm);
+    };
   }, []);
 
   useEffect(() => {
@@ -47,7 +54,9 @@ export function ClipboardSmsBanner() {
   // An empty or unreadable clipboard usually means the Shortcut has no Copy to Clipboard action, so the
   // sheet is opened for pasting by hand rather than leaving the user with an error and nothing to do.
   async function paste() {
-    setShownAt(null);
+    // The offer stays armed: a second SMS can arrive while the app is still in the foreground, where iOS
+    // fires no visibility change, so the bar has to be waiting again as soon as the sheet closes.
+    setShownAt(Date.now());
     try {
       const text = (await navigator.clipboard.readText()).trim();
       if (!text) return openSheet({ type: "sms" });

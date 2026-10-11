@@ -83,10 +83,18 @@ function smsToTransaction(raw: string, currency: Currency): Transaction | null {
   };
 }
 
-/** The same SMS handed over twice (link and clipboard) parses to the same timestamp, so it is matched exactly. */
+/**
+ * The same SMS handed over twice (link and clipboard) parses identically, so it is matched on every field.
+ * Two different payments can share an amount and a minute, and the balance left over tells them apart.
+ */
 function findSame(transactions: Transaction[], tx: Transaction) {
   return transactions.find(
-    (item) => item.at === tx.at && item.amount === tx.amount && item.kind === tx.kind && item.bank === tx.bank,
+    (item) =>
+      item.at === tx.at &&
+      item.amount === tx.amount &&
+      item.kind === tx.kind &&
+      item.bank === tx.bank &&
+      item.balance === tx.balance,
   );
 }
 
