@@ -90,10 +90,18 @@ function findSame(transactions: Transaction[], tx: Transaction) {
   );
 }
 
-/** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=`). */
+/** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=` or `#sms=`). */
 function readIncomingSms(): string | null {
-  const params = new URLSearchParams(location.search);
-  return params.get("sms") || params.get("text") || null;
+  const query = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.slice(1));
+  return query.get("sms") || query.get("text") || hash.get("sms") || null;
+}
+
+function stripIncomingSms() {
+  const url = new URL(location.href);
+  for (const key of ["sms", "text", "title"]) url.searchParams.delete(key);
+  if (new URLSearchParams(url.hash.slice(1)).has("sms")) url.hash = "";
+  history.replaceState(history.state, "", url.pathname + url.search + url.hash);
 }
 
 type InitialState = {
@@ -102,6 +110,7 @@ type InitialState = {
   sheet: Sheet;
   incoming: boolean;
   duplicate: boolean;
+  raw: string | null;
 };
 
 function createInitialState(): InitialState {
@@ -111,12 +120,12 @@ function createInitialState(): InitialState {
   const tx = raw ? smsToTransaction(raw, settings.currency) : null;
   const same = tx && findSame(transactions, tx);
   if (raw && same) {
-    return { settings, transactions, sheet: null, incoming: true, duplicate: true };
+    return { settings, transactions, sheet: null, incoming: true, duplicate: true, raw };
   }
   if (raw && tx) {
-    return { settings, transactions, sheet: { type: "confirm", tx, sms: raw }, incoming: true, duplicate: false };
+    return { settings, transactions, sheet: { type: "confirm", tx, sms: raw }, incoming: true, duplicate: false, raw };
   }
-  return { settings, transactions, sheet: raw ? { type: "sms" } : null, incoming: !!raw, duplicate: false };
+  return { settings, transactions, sheet: raw ? { type: "sms" } : null, incoming: !!raw, duplicate: false, raw };
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -137,12 +146,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const t = dictionaries[settings.locale];
 
   useEffect(() => {
-    if (!initial.incoming) return;
-    const url = new URL(location.href);
-    url.searchParams.delete("sms");
-    url.searchParams.delete("text");
-    url.searchParams.delete("title");
-    history.replaceState(history.state, "", url.pathname + url.search);
+    if (initial.incoming) stripIncomingSms();
   }, [initial]);
 
   useEffect(() => {
@@ -230,6 +234,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [notify, settings.currency, t, transactions],
   );
+
+  // A Home Screen web app that is already running is brought forward with the Shortcut's new URL instead of
+  // being reloaded, so the SMS has to be picked up again whenever the page resurfaces.
+  const handledSms = useRef(new Set(initial.raw ? [initial.raw] : []));
+
+  useEffect(() => {
+    const check = () => {
+      const raw = readIncomingSms();
+      if (!raw || handledSms.current.has(raw)) return;
+      handledSms.current.add(raw);
+      stripIncomingSms();
+      if (!receiveSms(raw)) setSheet({ type: "sms" });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    const events = ["pageshow", "popstate", "hashchange", "focus"] as const;
+    for (const name of events) window.addEventListener(name, check);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      for (const name of events) window.removeEventListener(name, check);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [receiveSms]);
 
   const confirmSms = useCallback(
     (tx: Transaction) => {
