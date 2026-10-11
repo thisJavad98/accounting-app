@@ -241,9 +241,18 @@ function extractDate(text: string): ExtractedDate {
   const result = date ? new Date(date[0], date[1] - 1, date[2], 12) : new Date(now);
   if (time && time[0] < 24 && time[1] < 60) result.setHours(time[0], time[1]);
   result.setSeconds(0, 0);
-  // Anything ahead of now was misread. Saying nothing is safer than filing the money in the future.
-  if (result.getTime() > now.getTime() + MINUTE) return { at: null, stated: false, rest };
-  return { at: result.getTime(), stated: !!date, rest };
+  if (result.getTime() <= now.getTime() + MINUTE) return { at: result.getTime(), stated: !!date, rest };
+
+  // Money cannot move in the future. A day still to come means the date itself was misread and is best
+  // forgotten, but within today it is only the clock that is off — a time stamped ahead, or the noon the
+  // parser falls back on when the SMS gives none — so the date stands and the moment becomes now.
+  const sameDay =
+    result.getFullYear() === now.getFullYear() &&
+    result.getMonth() === now.getMonth() &&
+    result.getDate() === now.getDate();
+  if (!date || !sameDay) return { at: null, stated: false, rest };
+  now.setSeconds(0, 0);
+  return { at: now.getTime(), stated: true, rest };
 }
 
 function detectBank(lines: string[], text: string): string {

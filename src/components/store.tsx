@@ -20,18 +20,22 @@ import {
 } from "@/lib/cookie-store";
 import { dayKey, todayKey, type DayKey } from "@/lib/dates";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
-import { intakeSms, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
+import { intakeSms, needsClipboardHandover, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
 import type { Currency, Locale, Settings, Theme, Transaction } from "@/lib/types";
 
 export type Sheet =
   | { type: "add" }
   | { type: "sms"; text?: string }
+  | { type: "paste" }
   | { type: "calendar" }
   | { type: "tx"; id: string | null; sms?: string }
   | { type: "confirm"; tx: Transaction; sms: string }
   | null;
 
 type Toast = { id: number; message: string; tone: "neutral" | "error" };
+
+/** How long the app must have been in the background before it asks about the clipboard again. */
+const AWAY_BEFORE_ASKING = 20_000;
 
 type StoreValue = {
   t: Dictionary;
@@ -229,6 +233,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [receiveSms]);
+
+  // On iOS the Shortcut's link arrives stripped of its query, so the message is only on the clipboard,
+  // which a page may not read on its own. The app therefore asks on the way in, once per visit.
+  useEffect(() => {
+    if (!needsClipboardHandover()) return;
+    let leftAt = 0;
+    const ask = () => setSheet((open) => open ?? { type: "paste" });
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") leftAt = Date.now();
+      else if (Date.now() - leftAt > AWAY_BEFORE_ASKING) ask();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    ask();
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   const confirmSms = useCallback(
     (tx: Transaction) => {

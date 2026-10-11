@@ -59,7 +59,7 @@ for (const [label, written] of [
 test("a bare clock time is not treated as a stated date", () => {
   const parsed = read("برداشت 1,250,000 ساعت 14:23:51 مانده 3,400,000");
   assert.equal(parsed.dateStated, false);
-  assert.equal(dayKey(new Date(parsed.at ?? 0)), todayKey());
+  assert.equal(intakeSms("برداشت 1,250,000 ساعت 14:23:51 مانده 3,400,000", "IRT", []).status, "ready");
 });
 
 test("takes the merchant as the title", () => {

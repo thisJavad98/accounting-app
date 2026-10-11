@@ -61,6 +61,17 @@ export function intakeSms(raw: string, currency: Currency, transactions: Transac
   return same ? { status: "duplicate", tx: same } : { status: "ready", tx };
 }
 
+/**
+ * Whether the SMS has to come in through the clipboard. iOS is the one platform that drops the query
+ * string when a Shortcut opens an installed web app, so there the link cannot carry the message.
+ */
+export function needsClipboardHandover(): boolean {
+  return (
+    /iphone|ipad|ipod/i.test(navigator.userAgent) &&
+    ("standalone" in navigator ? navigator.standalone === true : matchMedia("(display-mode: standalone)").matches)
+  );
+}
+
 /** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=` or `#sms=`). */
 export function readIncomingSms(): string | null {
   const query = new URLSearchParams(location.search);
