@@ -6,10 +6,11 @@ import { Sheet } from "./sheet";
 import { useStore } from "./store";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 
-export function SmsSheet() {
+export function SmsSheet({ initialText }: { initialText?: string }) {
   const { t, closeSheet, receiveSms } = useStore();
-  const [text, setText] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [text, setText] = useState(initialText ?? "");
+  // Text handed over here has already failed to parse, so the reason is shown straight away.
+  const [error, setError] = useState<string | null>(initialText ? t.sms.notFound : null);
   const fieldId = useId();
 
   function submit(raw: string) {

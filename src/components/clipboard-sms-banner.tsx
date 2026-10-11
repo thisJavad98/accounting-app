@@ -24,7 +24,7 @@ function launchedWithSms() {
  * copies the SMS too. Web pages may only read the clipboard from a tap, hence an offer instead of a read.
  */
 export function ClipboardSmsBanner() {
-  const { t, sheet, receiveSms, openSheet, notify } = useStore();
+  const { t, sheet, receiveSms, openSheet } = useStore();
   const [shownAt, setShownAt] = useState<number | null>(() => (isIosWebApp() && !launchedWithSms() ? Date.now() : null));
 
   useEffect(() => {
@@ -44,11 +44,14 @@ export function ClipboardSmsBanner() {
 
   if (shownAt === null || sheet) return null;
 
+  // An empty or unreadable clipboard usually means the Shortcut has no Copy to Clipboard action, so the
+  // sheet is opened for pasting by hand rather than leaving the user with an error and nothing to do.
   async function paste() {
     setShownAt(null);
     try {
-      const text = await navigator.clipboard.readText();
-      if (!text.trim() || !receiveSms(text)) notify(t.sms.notFound, "error");
+      const text = (await navigator.clipboard.readText()).trim();
+      if (!text) return openSheet({ type: "sms" });
+      if (!receiveSms(text)) openSheet({ type: "sms", text });
     } catch {
       openSheet({ type: "sms" });
     }

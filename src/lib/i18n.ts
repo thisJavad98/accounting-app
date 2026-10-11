@@ -169,6 +169,7 @@ const fa = {
     linkLabel: "آدرس دخل برای Open URLs",
     troubleTitle: "کار نکرد؟",
     trouble: [
+      "اگر «چسباندن» چیزی نیاورد، یعنی اکشن «Copy to Clipboard» در Shortcut نیست یا ورودی آن «Shortcut Input» نیست. Shortcut را باز کنید و مطمئن شوید این اکشن هست و قبل از «URL Encode» قرار دارد.",
       "از Sender استفاده نکنید: فقط مخاطبان Contacts را نشان می‌دهد و شماره‌های کوتاه بانک در آن نیستند. «Message» با کلمه «مانده» مطمئن‌تر است.",
       "اگر بانک شما به جای «مانده» کلمه «موجودی» می‌نویسد، یک تریگر Message دیگر با این کلمه به همان Shortcut اضافه کنید. در iOS 27 یک Shortcut می‌تواند چند تریگر داشته باشد.",
       "اگر قبل از اجرا سؤال می‌پرسد، فلش کنار تریگر را بزنید و مطمئن شوید «Confirm Before Run» خاموش است.",
@@ -392,6 +393,7 @@ const en: Dictionary = {
     linkLabel: "Dakhl link for Open URLs",
     troubleTitle: "Not working?",
     trouble: [
+      "If Paste brings nothing, your shortcut has no Copy to Clipboard action, or its input is not Shortcut Input. Open the shortcut and make sure that action is there, before URL Encode.",
       "Skip Sender: it only lists people in Contacts, and bank short numbers aren't there. Message with the word مانده is more reliable.",
       "If your bank writes موجودی instead of مانده, add a second Message trigger with that word to the same shortcut. In iOS 27 one shortcut can have several triggers.",
       "If it asks before running, tap the arrow beside the trigger and make sure Confirm Before Run is off.",
