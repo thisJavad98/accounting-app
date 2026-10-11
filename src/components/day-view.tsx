@@ -18,11 +18,13 @@ import { useStore } from "./store";
 import { TransactionRow } from "./transaction-row";
 import { primaryButton, secondaryButton } from "./ui";
 import { LogoMark } from "./logo";
+import { useRouter } from "next/navigation";
 
 export function DayView() {
   const { t, settings, transactions, selectedDay, setSelectedDay, openSheet } = useStore();
   const reduce = useReducedMotion();
   const locale = settings.locale;
+  const { push } =useRouter();
   const today = todayKey();
   const rtl = locale === "fa";
   const Prev = rtl ? CaretRight : CaretLeft;
@@ -58,7 +60,7 @@ export function DayView() {
   return (
     <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <header className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand">
+        <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand cursor-pointer" onClick={() => push("/")}>
           <LogoMark size={28} className="rounded-lg" />
           {t.appName}
         </span>
