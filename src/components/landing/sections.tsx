@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, ChartDonut, ChatText, NotePencil } from "@phosphor-icons/react";
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import Image from "next/image";
 import { useRef } from "react";
 import type { LandingCopy } from "@/lib/landing-copy";
 import type { Locale } from "@/lib/types";
@@ -11,28 +12,29 @@ import { setLandingLocale } from "./use-locale";
 import { LogoMark } from "../logo";
 
 /**
- * House colour of each bank, in the order they are listed in `landing-copy`. The real marks are
- * trademarks that cannot ship with the site, so each card wears a monogram in its bank's colour.
+ * The mark each bank wears, in the order `landing-copy` lists them. Logos are the CC0 vectors from
+ * github.com/zegond/logos-per-banks, which covers the established banks but neither neobank, so those
+ * two fall back to a monogram in their house colour.
  */
-const BANK_COLORS = [
-  "#E4007F",
-  "#0B6FB4",
-  "#1A73E8",
-  "#1C3F94",
-  "#00A0A8",
-  "#1B59F8",
-  "#B8912F",
-  "#C8102E",
-  "#1E6B3A",
-  "#6A3FA0",
-  "#00796B",
-  "#D32F2F",
-  "#1565C0",
-  "#2E7D32",
-  "#00897B",
-  "#512DA8",
-  "#7B1FA2",
-  "#455A64",
+const BANK_MARKS: { logo?: string; color: string }[] = [
+  { logo: "mellat", color: "#E4007F" },
+  { logo: "melli", color: "#0B6FB4" },
+  { color: "#1A73E8" },
+  { logo: "saderat", color: "#1C3F94" },
+  { logo: "tejarat", color: "#00A0A8" },
+  { logo: "saman", color: "#1B59F8" },
+  { logo: "pasargad", color: "#B8912F" },
+  { logo: "parsian", color: "#C8102E" },
+  { logo: "sepah", color: "#1E6B3A" },
+  { logo: "resalat", color: "#6A3FA0" },
+  { logo: "ayandeh", color: "#00796B" },
+  { logo: "shahr", color: "#D32F2F" },
+  { logo: "maskan", color: "#1565C0" },
+  { logo: "keshavarzi", color: "#2E7D32" },
+  { logo: "refah", color: "#00897B" },
+  { logo: "eghtesad-novin", color: "#512DA8" },
+  { color: "#7B1FA2" },
+  { logo: "sina", color: "#455A64" },
 ];
 
 export function BankMarquee({ copy }: { copy: LandingCopy }) {
@@ -42,22 +44,31 @@ export function BankMarquee({ copy }: { copy: LandingCopy }) {
       <p className="mx-auto max-w-7xl px-5 text-sm font-semibold text-muted md:px-8">{copy.banksTitle}</p>
       <div dir="ltr" className="relative mt-6 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_12%,black_88%,transparent)]">
         <div className="marquee flex w-max">
-          {row.map((bank, i) => (
-            <span
-              key={`${bank}-${i}`}
-              aria-hidden={i >= copy.banks.length}
-              className="me-3 inline-flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-sunken ps-2 pe-5 text-base font-bold whitespace-nowrap"
-            >
+          {row.map((bank, i) => {
+            const mark = BANK_MARKS[i % copy.banks.length];
+            return (
               <span
-                style={{ backgroundColor: BANK_COLORS[i % copy.banks.length] }}
-                className="inline-flex size-8 items-center justify-center rounded-full text-sm font-black text-white"
-                aria-hidden
+                key={`${bank}-${i}`}
+                aria-hidden={i >= copy.banks.length}
+                className="me-3 inline-flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-sunken ps-2 pe-5 text-base font-bold whitespace-nowrap"
               >
-                {bank.trim()[0]}
+                {mark.logo ? (
+                  <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white">
+                    <Image src={`/landing/banks/${mark.logo}.svg`} alt="" width={28} height={28} unoptimized />
+                  </span>
+                ) : (
+                  <span
+                    style={{ backgroundColor: mark.color }}
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
+                    aria-hidden
+                  >
+                    {bank.trim()[0]}
+                  </span>
+                )}
+                {bank}
               </span>
-              {bank}
-            </span>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
