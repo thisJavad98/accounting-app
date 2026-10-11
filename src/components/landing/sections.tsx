@@ -10,6 +10,31 @@ import { PhoneFrame, Screenshot, type Shot } from "./phone";
 import { setLandingLocale } from "./use-locale";
 import { LogoMark } from "../logo";
 
+/**
+ * House colour of each bank, in the order they are listed in `landing-copy`. The real marks are
+ * trademarks that cannot ship with the site, so each card wears a monogram in its bank's colour.
+ */
+const BANK_COLORS = [
+  "#E4007F",
+  "#0B6FB4",
+  "#1A73E8",
+  "#1C3F94",
+  "#00A0A8",
+  "#1B59F8",
+  "#B8912F",
+  "#C8102E",
+  "#1E6B3A",
+  "#6A3FA0",
+  "#00796B",
+  "#D32F2F",
+  "#1565C0",
+  "#2E7D32",
+  "#00897B",
+  "#512DA8",
+  "#7B1FA2",
+  "#455A64",
+];
+
 export function BankMarquee({ copy }: { copy: LandingCopy }) {
   const row = [...copy.banks, ...copy.banks];
   return (
@@ -21,8 +46,15 @@ export function BankMarquee({ copy }: { copy: LandingCopy }) {
             <span
               key={`${bank}-${i}`}
               aria-hidden={i >= copy.banks.length}
-              className="me-3 inline-flex h-12 shrink-0 items-center rounded-full bg-sunken px-6 text-base font-bold whitespace-nowrap"
+              className="me-3 inline-flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-sunken ps-2 pe-5 text-base font-bold whitespace-nowrap"
             >
+              <span
+                style={{ backgroundColor: BANK_COLORS[i % copy.banks.length] }}
+                className="inline-flex size-8 items-center justify-center rounded-full text-sm font-black text-white"
+                aria-hidden
+              >
+                {bank.trim()[0]}
+              </span>
               {bank}
             </span>
           ))}
@@ -92,19 +124,22 @@ function StepCard({
     <div className="sticky h-[78dvh] min-h-[34rem]" style={{ top: `calc(5.5rem + ${index * 1.5}rem)` }}>
       <motion.article
         style={reduce ? undefined : { scale }}
-        className={`grid h-full origin-top grid-cols-1 overflow-hidden rounded-[2rem] md:grid-cols-[1.1fr_0.9fr] ${STEP_STYLES[index]}`}
+        className={`grid h-full origin-top grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[2rem] md:grid-cols-[1.1fr_0.9fr] md:grid-rows-1 ${STEP_STYLES[index]}`}
       >
-        <div className="flex flex-col justify-between gap-6 p-7 md:p-12">
-          <Glyph size={56} weight="duotone" className="opacity-70" aria-hidden />
+        <div className="flex flex-col gap-4 p-7 md:justify-between md:gap-6 md:p-12">
+          <Glyph size={44} weight="duotone" className="opacity-70 md:size-14" aria-hidden />
           <div className="flex flex-col gap-3">
-            <h3 className="text-4xl font-black tracking-tight md:text-6xl">{title}</h3>
+            <h3 className="text-3xl font-black tracking-tight md:text-6xl">{title}</h3>
             <p className="max-w-[40ch] text-base leading-relaxed opacity-80 md:text-lg">{body}</p>
           </div>
         </div>
-        <div className="relative hidden overflow-hidden md:block">
-          <motion.div style={reduce ? undefined : { y: imageY }} className="absolute inset-x-12 top-12">
+        <div className="relative overflow-hidden">
+          <motion.div
+            style={reduce ? undefined : { y: imageY }}
+            className="absolute inset-x-16 top-2 md:inset-x-12 md:top-12"
+          >
             <PhoneFrame>
-              <Screenshot locale={locale} shot={STEP_SHOTS[index]} sizes="320px" />
+              <Screenshot locale={locale} shot={STEP_SHOTS[index]} sizes="(min-width: 768px) 320px, 55vw" />
             </PhoneFrame>
           </motion.div>
         </div>
