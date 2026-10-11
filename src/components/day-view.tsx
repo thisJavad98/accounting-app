@@ -13,7 +13,6 @@ import {
   todayKey,
 } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
-import { ClipboardSmsBanner } from "./clipboard-sms-banner";
 import { Money } from "./money";
 import { useStore } from "./store";
 import { TransactionRow } from "./transaction-row";
@@ -76,8 +75,6 @@ export function DayView() {
           <CaretDown size={12} weight="bold" aria-hidden />
         </button>
       </header>
-
-      <ClipboardSmsBanner />
 
       <div className="flex items-center gap-1">
         <button

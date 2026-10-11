@@ -57,8 +57,6 @@ const fa = {
     read: "خواندن پیامک",
     notFound: "مبلغی در این متن پیدا نشد. متن کامل پیامک را بچسبانید.",
     clipboardDenied: "دسترسی به کلیپ‌بورد داده نشد. متن را دستی بچسبانید.",
-    clipboardOffer: "پیامک بانک تازه رسیده؟",
-    clipboardPaste: "چسباندن",
     placeholder: "برداشت: ۱,۲۵۰,۰۰۰\nمانده: ۳,۴۰۰,۰۰۰",
   },
   form: {
@@ -163,7 +161,7 @@ const fa = {
       },
       {
         title: "تمام شد",
-        body: "از این به بعد با رسیدن هر پیامک بانک، برنامه دخل باز می‌شود. اگر پیامک را مستقیم نشان نداد، «چسباندن» بالای صفحه و بعد «Paste» آیفون را بزنید. دخل مبلغ و بانک را خودش می‌خواند و فقط عنوان را می‌پرسد.",
+        body: "از این به بعد با رسیدن هر پیامک بانک، برنامه دخل باز می‌شود و جزئیات تراکنش را نشان می‌دهد. با «تأیید و ثبت» به تاریخچه اضافه می‌شود. اگر پنجره باز نشد، «افزودن»، «از پیامک بانک» و بعد «چسباندن از کلیپ‌بورد» را بزنید.",
       },
     ],
     linkLabel: "آدرس دخل برای Open URLs",
@@ -280,8 +278,6 @@ const en: Dictionary = {
     read: "Read SMS",
     notFound: "No amount found in this text. Paste the full SMS.",
     clipboardDenied: "Clipboard access was blocked. Paste the text by hand.",
-    clipboardOffer: "Just got a bank SMS?",
-    clipboardPaste: "Paste",
     placeholder: "Debited: 1,250,000\nBalance: 3,400,000",
   },
   form: {
@@ -386,7 +382,7 @@ const en: Dictionary = {
       },
       {
         title: "You're done",
-        body: "From now on every bank SMS opens the Dakhl app. If it doesn't show the SMS right away, tap Paste at the top, then the iPhone's Paste button. Dakhl reads the amount and bank for you and only asks for a title.",
+        body: "From now on every bank SMS opens the Dakhl app with the transaction details. Tap Confirm to add it to your history. If the details don't open, tap Add, From bank SMS, then Paste from clipboard.",
       },
     ],
     linkLabel: "Dakhl link for Open URLs",
