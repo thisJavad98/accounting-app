@@ -25,9 +25,14 @@ export type Transaction = {
   note: string;
   category: CategoryId;
   bank: string;
+  /** Account balance reported by the bank SMS, if any. */
+  balance: number | null;
 };
+
+export type Theme = "system" | "light" | "dark";
 
 export type Settings = {
   locale: Locale;
   currency: Currency;
+  theme: Theme;
 };

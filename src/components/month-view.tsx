@@ -90,7 +90,7 @@ export function MonthView() {
 
   function openDay(day: string) {
     setSelectedDay(day);
-    router.push("/");
+    router.push("/app");
   }
 
   return (
@@ -130,7 +130,7 @@ export function MonthView() {
             <div key={item.label} className="flex flex-col gap-1 rounded-2xl bg-sunken px-3 py-3">
               <dt className="text-xs font-medium text-muted">{item.label}</dt>
               <dd>
-                <Money value={item.value} sign={item.sign} className="text-sm font-bold" unitClassName="text-[10px] font-medium text-muted" />
+                <Money value={item.value} sign={item.sign} className="flex-wrap text-sm font-bold" unitClassName="text-[10px] font-medium text-muted" />
               </dd>
             </div>
           ))}

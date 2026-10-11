@@ -1,12 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Vazirmatn } from "next/font/google";
-import { Suspense } from "react";
-import { AppSkeleton } from "@/components/app-skeleton";
-import { BottomNav } from "@/components/bottom-nav";
 import { ServiceWorker } from "@/components/service-worker";
-import { Sheets } from "@/components/sheets";
-import { StoreProvider } from "@/components/store";
-import { ToastViewport } from "@/components/toast";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -23,9 +17,18 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "دخل و خرج | Dakhl",
+  title: "دخل | Dakhl, accounting from your bank SMS",
   description: "Personal accounting from your bank SMS, stored only in your browser.",
-  appleWebApp: { capable: true, title: "Dakhl", statusBarStyle: "default" },
+  applicationName: "دخل | Dakhl",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/192", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: { capable: true, title: "دخل", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -38,8 +41,8 @@ export const viewport: Viewport = {
   ],
 };
 
-/** Applies the saved language before first paint so RTL/LTR never flips visibly. */
-const localeScript = `(function(){try{var m=document.cookie.match(/(?:^|; )dk_lang=(en|fa)/);var l=m?m[1]:"fa";var h=document.documentElement;h.lang=l;h.dir=l==="fa"?"rtl":"ltr";}catch(e){}})();`;
+/** Applies the saved language and theme before first paint so direction and colors never flip visibly. */
+const bootScript = `(function(){try{var c=document.cookie,h=document.documentElement;var m=c.match(/(?:^|; )dk_lang=(en|fa)/);var l=m?m[1]:"fa";h.lang=l;h.dir=l==="fa"?"rtl":"ltr";var t=c.match(/(?:^|; )dk_theme=(light|dark)/);if(t)h.dataset.theme=t[1];}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -50,19 +53,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${vazirmatn.variable} ${geist.variable} antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: localeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body>
-        <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[440px] flex-col bg-bg md:border-x md:border-line">
-          <Suspense fallback={<AppSkeleton />}>
-            <StoreProvider>
-              <main className="flex flex-1 flex-col pb-40">{children}</main>
-              <BottomNav />
-              <Sheets />
-              <ToastViewport />
-            </StoreProvider>
-          </Suspense>
-        </div>
+        {children}
         <ServiceWorker />
       </body>
     </html>

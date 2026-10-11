@@ -1,23 +1,26 @@
-import type { CategoryId, Currency, Locale, Settings, Transaction } from "./types";
+import { deflateSync, inflateSync } from "fflate";
+import type { CategoryId, Currency, Locale, Settings, Theme, Transaction } from "./types";
 import { CATEGORY_IDS } from "./categories";
 
 /**
  * Browsers cap a single cookie at ~4KB, so transactions are serialized as
- * compact tuples, base64-encoded and split across numbered cookies.
- * Every cookie is sent with every request, so the total is capped well below
- * the request-header limits of common servers (see `dev`/`start` scripts).
+ * compact tuples, deflated, base64-encoded and split across numbered cookies.
+ * Every cookie is sent with every request, and Vercel rejects a Cookie header
+ * over 16KB (494 REQUEST_HEADER_TOO_LARGE), so the total stays under ~11KB.
  */
 const CHUNK_SIZE = 3800;
-const MAX_CHUNKS = 24;
+const MAX_CHUNKS = 3;
+const COMPRESSED = "z";
 const TX_PREFIX = "dk_t";
 const TX_COUNT = "dk_tn";
 const LANG = "dk_lang";
 const CURRENCY = "dk_cur";
+const THEME = "dk_theme";
 const MAX_AGE = 60 * 60 * 24 * 400;
 
 export const STORAGE_CAPACITY = CHUNK_SIZE * MAX_CHUNKS;
 
-type TxTuple = [string, 0 | 1, number, number, string, string, string, string];
+type TxTuple = [string, 0 | 1, number, number, string, string, string, string, number | null];
 
 function readCookies(): Map<string, string> {
   const map = new Map<string, string>();
@@ -35,19 +38,20 @@ function writeCookie(name: string, value: string, maxAge = MAX_AGE) {
 }
 
 function encode(text: string): string {
-  const bytes = new TextEncoder().encode(text);
+  const bytes = deflateSync(new TextEncoder().encode(text), { level: 9 });
   let binary = "";
   for (let i = 0; i < bytes.length; i += 0x8000) {
     binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   }
-  return btoa(binary);
+  return COMPRESSED + btoa(binary);
 }
 
-function decode(base64: string): string {
-  const binary = atob(base64);
+function decode(payload: string): string {
+  const compressed = payload.startsWith(COMPRESSED);
+  const binary = atob(compressed ? payload.slice(COMPRESSED.length) : payload);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
+  return new TextDecoder().decode(compressed ? inflateSync(bytes) : bytes);
 }
 
 function toTuple(tx: Transaction): TxTuple {
@@ -60,12 +64,13 @@ function toTuple(tx: Transaction): TxTuple {
     tx.note,
     tx.category,
     tx.bank,
+    tx.balance,
   ];
 }
 
 function fromTuple(raw: unknown): Transaction | null {
   if (!Array.isArray(raw) || raw.length < 8) return null;
-  const [id, kind, amount, at, title, note, category, bank] = raw;
+  const [id, kind, amount, at, title, note, category, bank, balance] = raw;
   if (typeof id !== "string" || typeof amount !== "number" || typeof at !== "number") {
     return null;
   }
@@ -80,6 +85,7 @@ function fromTuple(raw: unknown): Transaction | null {
       ? (category as CategoryId)
       : "other",
     bank: String(bank ?? ""),
+    balance: typeof balance === "number" ? balance : null,
   };
 }
 
@@ -117,6 +123,7 @@ function looseTuple(obj: Record<string, unknown>): unknown[] {
     obj.note,
     obj.category,
     obj.bank,
+    obj.balance,
   ];
 }
 
@@ -163,17 +170,20 @@ export function loadSettings(): Settings {
   const cookies = readCookies();
   const locale = cookies.get(LANG);
   const currency = cookies.get(CURRENCY);
+  const theme = cookies.get(THEME);
   return {
     locale: locale === "en" ? "en" : "fa",
     currency: (["IRT", "IRR", "USD", "EUR"] as const).includes(currency as Currency)
       ? (currency as Currency)
       : "IRT",
+    theme: theme === "light" || theme === "dark" ? (theme satisfies Theme) : "system",
   };
 }
 
 export function saveSettings(settings: Settings) {
   writeCookie(LANG, settings.locale satisfies Locale);
   writeCookie(CURRENCY, settings.currency);
+  writeCookie(THEME, settings.theme);
 }
 
 export function clearTransactions() {

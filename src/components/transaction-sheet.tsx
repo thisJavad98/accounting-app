@@ -3,8 +3,9 @@
 import { ArrowDownLeft, ArrowUpRight, Trash } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
 import { CATEGORY_IDS } from "@/lib/categories";
-import { fromDayKey, todayKey } from "@/lib/dates";
+import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
 import { formatAmountInput, formatNumber, newId, parseAmount } from "@/lib/format";
+import { parseBankSms, type ParsedSms } from "@/lib/sms-parser";
 import type { CategoryId, Transaction, TxKind } from "@/lib/types";
 import { CategoryIcon } from "./category-icon";
 import { Sheet } from "./sheet";
@@ -19,6 +20,49 @@ function defaultTimestamp(day: string) {
   return date.getTime();
 }
 
+function SmsDetails({ tx, parsed, sms }: { tx: Transaction; parsed: ParsedSms | null; sms?: string }) {
+  const { t, settings } = useStore();
+  const locale = settings.locale;
+  const unit = t.currencies[settings.currency];
+  const fields = [
+    { label: t.form.bank, value: tx.bank },
+    { label: t.form.when, value: `${formatDayLong(dayKey(new Date(tx.at)), locale)}  ${formatTime(tx.at, locale)}` },
+    { label: t.form.balance, value: tx.balance === null ? "" : `${formatNumber(tx.balance, locale)} ${unit}` },
+    { label: t.form.account, value: parsed?.account ? `**${parsed.account}` : "" },
+    { label: t.form.holder, value: parsed?.holder ?? "" },
+  ].filter((field) => field.value);
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl bg-brand-soft p-4 text-brand-ink">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold">{t.form.extracted}</span>
+        <span className="text-xl font-black tabular-nums">
+          {tx.kind === "income" ? "+" : "\u2212"}
+          {formatNumber(tx.amount, locale)} <span className="text-xs font-medium">{unit}</span>
+        </span>
+      </div>
+      {fields.length > 0 && (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          {fields.map((field) => (
+            <div key={field.label} className="flex min-w-0 flex-col">
+              <dt className="text-xs opacity-75">{field.label}</dt>
+              <dd className="truncate font-semibold">{field.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {sms && (
+        <details className="text-sm">
+          <summary className="cursor-pointer select-none opacity-80">{t.form.original}</summary>
+          <p dir="auto" className="mt-2 whitespace-pre-line leading-relaxed opacity-90">
+            {sms}
+          </p>
+        </details>
+      )}
+    </div>
+  );
+}
+
 export function TransactionSheet({ id, sms }: { id: string | null; sms?: string }) {
   const { t, settings, transactions, selectedDay, closeSheet, saveTransaction, deleteTransaction, notify } =
     useStore();
@@ -31,7 +75,8 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
   const [amountText, setAmountText] = useState(() =>
     existing ? formatAmountInput(String(existing.amount), settings.locale) : "",
   );
-  const [title, setTitle] = useState(existing?.title ?? "");
+  const parsed = useMemo(() => (sms ? parseBankSms(sms) : null), [sms]);
+  const [title, setTitle] = useState(existing?.title || parsed?.suggestedTitle || "");
   const [note, setNote] = useState(existing?.note ?? "");
   const [category, setCategory] = useState<CategoryId>(existing?.category ?? "other");
   const [errors, setErrors] = useState<{ amount?: boolean; title?: boolean }>({});
@@ -70,6 +115,7 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
       note: note.trim(),
       category,
       bank: existing?.bank ?? "",
+      balance: existing?.balance ?? null,
     };
     if (saveTransaction(tx)) {
       notify(t.toast.saved);
@@ -81,24 +127,7 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
     <Sheet title={heading} description={fromBank ? t.form.newSmsBody : undefined} onClose={closeSheet}>
       <form onSubmit={submit} className="flex flex-col gap-6" noValidate>
         {fromBank && existing && (
-          <div className="flex flex-col gap-1 rounded-2xl bg-brand-soft px-4 py-3 text-brand-ink">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">{existing.bank || t.form.bank}</span>
-              <span className="text-lg font-bold tabular-nums">
-                {existing.kind === "income" ? "+" : "\u2212"}
-                {formatNumber(existing.amount, settings.locale)}{" "}
-                <span className="text-xs font-medium">{t.currencies[settings.currency]}</span>
-              </span>
-            </div>
-            {sms && (
-              <details className="text-sm">
-                <summary className="cursor-pointer select-none opacity-80">{t.form.original}</summary>
-                <p dir="auto" className="mt-2 whitespace-pre-line leading-relaxed opacity-90">
-                  {sms}
-                </p>
-              </details>
-            )}
-          </div>
+          <SmsDetails tx={existing} parsed={parsed} sms={sms} />
         )}
 
         <div role="radiogroup" aria-label={t.form.expense} className="grid grid-cols-2 gap-1 rounded-full bg-sunken p-1">

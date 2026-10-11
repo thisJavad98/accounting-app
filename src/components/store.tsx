@@ -22,7 +22,7 @@ import { dayKey, todayKey, type DayKey } from "@/lib/dates";
 import { newId } from "@/lib/format";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
 import { parseBankSms } from "@/lib/sms-parser";
-import type { Currency, Locale, Settings, Transaction } from "@/lib/types";
+import type { Currency, Locale, Settings, Theme, Transaction } from "@/lib/types";
 
 export type Sheet =
   | { type: "add" }
@@ -41,6 +41,7 @@ type StoreValue = {
   toast: Toast | null;
   setLocale: (locale: Locale) => void;
   setCurrency: (currency: Currency) => void;
+  setTheme: (theme: Theme) => void;
   setSelectedDay: (day: DayKey) => void;
   openSheet: (sheet: Sheet) => void;
   closeSheet: () => void;
@@ -63,15 +64,17 @@ export function useStore() {
 function smsToTransaction(raw: string, currency: Currency): Transaction | null {
   const parsed = parseBankSms(raw);
   if (!parsed) return null;
+  const toCurrency = (value: number) => (currency === "IRT" && parsed.inRial ? Math.round(value / 10) : value);
   return {
     id: newId(),
     kind: parsed.kind,
-    amount: currency === "IRT" && parsed.inRial ? parsed.amount / 10 : parsed.amount,
-    at: Date.now(),
+    amount: toCurrency(parsed.amount),
+    at: parsed.at ?? Date.now(),
     title: "",
     note: "",
-    category: parsed.kind === "income" ? "transfer" : "other",
+    category: parsed.category,
     bank: parsed.bank,
+    balance: parsed.balance === null ? null : toCurrency(parsed.balance),
   };
 }
 
@@ -132,6 +135,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     root.lang = settings.locale;
     root.dir = settings.locale === "fa" ? "rtl" : "ltr";
   }, [settings.locale]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.theme === "system") delete root.dataset.theme;
+    else root.dataset.theme = settings.theme;
+  }, [settings.theme]);
 
   const notify = useCallback((message: string, tone: Toast["tone"] = "neutral") => {
     toastId.current += 1;
@@ -212,6 +221,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toast,
       setLocale: (locale) => updateSettings({ locale }),
       setCurrency: (currency) => updateSettings({ currency }),
+      setTheme: (theme) => updateSettings({ theme }),
       setSelectedDay,
       openSheet: setSheet,
       closeSheet: () => setSheet(null),

@@ -1,28 +1,26 @@
-import { Wallet } from "@phosphor-icons/react/ssr";
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/logo";
+
+const VARIANTS = {
+  "192": { px: 192, tile: "rounded", scale: 1 },
+  "512": { px: 512, tile: "rounded", scale: 1 },
+  maskable: { px: 512, tile: "bleed", scale: 0.72 },
+  apple: { px: 180, tile: "bleed", scale: 0.86 },
+} as const;
 
 export function generateStaticParams() {
-  return [{ size: "192" }, { size: "512" }];
+  return Object.keys(VARIANTS).map((size) => ({ size }));
 }
 
 export async function GET(_request: Request, context: RouteContext<"/icons/[size]">) {
   const { size } = await context.params;
-  const px = size === "512" ? 512 : 192;
+  const variant = VARIANTS[size as keyof typeof VARIANTS] ?? VARIANTS["512"];
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#c8440f",
-        }}
-      >
-        <Wallet size={px * 0.56} color="#fff7f2" weight="duotone" />
+      <div style={{ width: "100%", height: "100%", display: "flex" }}>
+        <LogoMark size={variant.px} tile={variant.tile} scale={variant.scale} />
       </div>
     ),
-    { width: px, height: px },
+    { width: variant.px, height: variant.px },
   );
 }

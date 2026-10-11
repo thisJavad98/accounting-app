@@ -17,6 +17,7 @@ import { Money } from "./money";
 import { useStore } from "./store";
 import { TransactionRow } from "./transaction-row";
 import { primaryButton, secondaryButton } from "./ui";
+import { LogoMark } from "./logo";
 
 export function DayView() {
   const { t, settings, transactions, selectedDay, setSelectedDay, openSheet } = useStore();
@@ -57,7 +58,10 @@ export function DayView() {
   return (
     <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <header className="flex items-center justify-between">
-        <span className="text-lg font-black tracking-tight text-brand">{t.appName}</span>
+        <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand">
+          <LogoMark size={28} className="rounded-lg" />
+          {t.appName}
+        </span>
         <span className="text-sm font-medium text-muted">{formatMonth(selectedDay, locale)}</span>
       </header>
 

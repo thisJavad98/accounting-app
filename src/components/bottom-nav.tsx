@@ -9,10 +9,10 @@ export function BottomNav() {
   const { t, openSheet } = useStore();
   const pathname = usePathname();
 
-  const items: { href: "/" | "/month" | "/settings"; label: string; icon: Icon }[] = [
-    { href: "/", label: t.nav.day, icon: CalendarDots },
-    { href: "/month", label: t.nav.month, icon: ChartDonut },
-    { href: "/settings", label: t.nav.settings, icon: GearSix },
+  const items: { href: "/app" | "/app/month" | "/app/settings"; label: string; icon: Icon }[] = [
+    { href: "/app", label: t.nav.day, icon: CalendarDots },
+    { href: "/app/month", label: t.nav.month, icon: ChartDonut },
+    { href: "/app/settings", label: t.nav.settings, icon: GearSix },
   ];
 
   return (

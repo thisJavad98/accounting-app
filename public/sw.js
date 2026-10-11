@@ -1,7 +1,16 @@
-// Network-first cache so the app shell opens offline. Data lives in cookies, not here.
-const CACHE = "dakhl-v1";
+// Network-first cache so the app opens offline. Data lives in cookies, not here.
+const CACHE = "dakhl-v2";
+const SHELL = ["/app", "/app/month", "/app/settings", "/", "/icon.svg", "/icons/192", "/icons/512"];
 
-self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(SHELL))
+      .catch(() => {})
+      .then(() => self.skipWaiting()),
+  );
+});
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -31,7 +40,7 @@ self.addEventListener("fetch", (event) => {
       .catch(() =>
         caches
           .match(key)
-          .then((cached) => cached ?? caches.match("/"))
+          .then((cached) => cached ?? (request.mode === "navigate" ? caches.match("/app") : undefined))
           .then((cached) => cached ?? Response.error()),
       ),
   );

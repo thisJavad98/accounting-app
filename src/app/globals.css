@@ -23,8 +23,26 @@
   --shadow: 24 24 27;
 }
 
+:root[data-theme="dark"] {
+  --backdrop: #050506;
+  --bg: #111113;
+  --surface: #1b1b1e;
+  --sunken: #232327;
+  --ink: #f4f4f5;
+  --muted: #a1a1aa;
+  --faint: #63636b;
+  --line: #2a2a2e;
+  --brand: #f07a3a;
+  --on-brand: #18181b;
+  --brand-soft: #3a2216;
+  --brand-ink: #f5a273;
+  --danger: #f97066;
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --backdrop: #050506;
     --bg: #111113;
     --surface: #1b1b1e;
@@ -39,6 +57,7 @@
     --brand-ink: #f5a273;
     --danger: #f97066;
     --shadow: 0 0 0;
+    color-scheme: dark;
   }
 }
 
@@ -61,7 +80,7 @@
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -72,6 +91,49 @@ html[lang="en"] body {
 body {
   background: var(--backdrop);
   color: var(--ink);
+}
+
+html:has(body .marquee) {
+  scroll-behavior: smooth;
+}
+
+.only-dark {
+  display: none;
+}
+:root[data-theme="dark"] .only-dark {
+  display: block;
+}
+:root[data-theme="dark"] .only-light {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .only-dark {
+    display: block;
+  }
+  :root:not([data-theme="light"]) .only-light {
+    display: none;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 38s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(body .marquee) {
+    scroll-behavior: auto;
+  }
+  .marquee {
+    animation: none;
+  }
 }
 
 .no-scrollbar {
