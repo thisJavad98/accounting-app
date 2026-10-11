@@ -92,7 +92,8 @@ const CATEGORY_HINTS: [CategoryId, RegExp][] = [
 ];
 
 // The lookarounds stop the hyphens of a card number (6104-3378-…) from being taken for minus signs.
-const NUMBER = /(?<!\d)([+-]?)\s*(\d{1,3}(?:[,٬]\d{3})+|\d+)(\.\d+)?\s*([+-]?)(?!\d)/g;
+// Dots group thousands only from two groups up (1.250.000), where they cannot be a decimal point.
+const NUMBER = /(?<!\d)([+-]?)\s*(\d{1,3}(?:\.\d{3}){2,}|\d{1,3}(?:[,٬]\d{3})+|\d+)(\.\d+)?\s*([+-]?)(?!\d)/g;
 const CURRENCY_AFTER = /^\s*(ریال|تومان|rials?|irr|toman|usd|eur|\$|€)/i;
 const CURRENCY_BEFORE = /(ریال|تومان|rials?|irr|toman|usd|eur|\$|€)\s*$/i;
 const ACCOUNT_BEFORE = /(حساب|کارت|account|acct|card|a\/c)\s*(شماره|no\.?|number)?\s*[:：#]?\s*$/i;
@@ -115,6 +116,26 @@ const has = (line: string, words: string[]) => {
   return words.some((w) => lower.includes(w));
 };
 
+const MONEY_WORDS = [
+  ...EXPENSE_WORDS,
+  ...INCOME_WORDS,
+  ...BALANCE_WORDS,
+  ...AMOUNT_WORDS,
+  "ریال",
+  "تومان",
+  "rial",
+  "irr",
+  "toman",
+];
+
+/**
+ * Whether the text talks about money at all. The clipboard holds whatever was copied last, so this is
+ * what separates an SMS the parser merely struggled with from a shopping list that was never one.
+ */
+export function looksLikeBankSms(text: string): boolean {
+  return has(normalize(text), MONEY_WORDS);
+}
+
 function firstIndex(text: string, words: string[]) {
   const lower = text.toLowerCase();
   let best = -1;
@@ -131,17 +152,27 @@ function beforeBalance(line: string) {
   return cut === -1 ? line : line.slice(0, cut);
 }
 
-type Found = { value: number; sign: "+" | "-" | ""; index: number; end: number };
+type Found = {
+  value: number;
+  sign: "+" | "-" | "";
+  /** Whether it was written in thousands groups, as money nearly always is and card digits never are. */
+  grouped: boolean;
+  digits: number;
+  index: number;
+  end: number;
+};
 
 function numbersIn(line: string): Found[] {
   const found: Found[] = [];
   for (const match of line.matchAll(NUMBER)) {
-    const digits = match[2].replace(/[,٬]/g, "");
+    const digits = match[2].replace(/[,٬.]/g, "");
     if (digits.length > 13) continue;
     const sign = (match[1] || match[4]) as Found["sign"];
     found.push({
       value: Number(digits + (match[3] ?? "")),
       sign,
+      grouped: digits.length !== match[2].length,
+      digits: digits.length,
       index: match.index,
       end: match.index + match[0].length,
     });
@@ -265,6 +296,8 @@ function suggestTitle(lines: string[], kindWords: string[]): string {
 /** Extracts every useful field from an Iranian or English bank SMS. Returns null if no amount is found. */
 export function parseBankSms(raw: string): ParsedSms | null {
   const normalized = normalize(raw);
+  // Nothing that never mentions money or a currency is a bank SMS, whatever numbers it happens to hold.
+  if (!has(normalized, MONEY_WORDS)) return null;
   const { at, stated, rest } = extractDate(normalized);
   const lines = rest
     .split(/\n|(?<=[.;])\s+/)
@@ -303,13 +336,27 @@ export function parseBankSms(raw: string): ParsedSms | null {
       if (has(label, amountKeywords)) score += 4;
       if (currency) score += 6;
       if (n.sign) score += 3;
-      if (score === 0 && (ignored || String(Math.trunc(n.value)).length < 4)) continue;
+      if (score === 0 && (ignored || n.digits < 4)) continue;
       score += 1;
       if (!best || score > best.score || (score === best.score && n.value > best.found.value && score === 1)) {
         best = { found: n, score };
       }
     }
     balance ??= lineBalance;
+  }
+
+  // Banks word their messages every way imaginable, and some name the amount with nothing beside it that
+  // the parser knows. Rather than refuse the whole SMS, the largest number that could be money is taken;
+  // the drawer puts the figure in front of the reader for confirmation before anything is saved.
+  if (!best) {
+    const spare = lines
+      .flatMap((line) => {
+        const risky = has(line, IGNORE_LINE);
+        return numbersIn(line).filter((n) => n.grouped || (!risky && n.digits >= 5 && n.digits <= 12));
+      })
+      .filter((n) => n.value !== balance)
+      .sort((a, b) => b.value - a.value)[0];
+    if (spare) best = { found: spare, score: 0 };
   }
   if (!best) return null;
 

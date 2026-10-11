@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { dayKey, todayKey } from "./dates";
 import { intakeSms } from "./sms-intake";
-import { parseBankSms } from "./sms-parser";
+import { looksLikeBankSms, parseBankSms } from "./sms-parser";
 
 const jalali = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
   year: "numeric",
@@ -66,6 +66,25 @@ test("takes the merchant as the title", () => {
   assert.equal(read("خرید از دیجی کالا\nمبلغ 2,400,000 ریال\nمانده 9,100,000").suggestedTitle, "دیجی کالا");
   assert.equal(read("purchase 1,250,000 IRR at Starbucks. balance 3,400,000").suggestedTitle, "Starbucks");
   assert.equal(read("خرید از کارت 6104-3378-1234-5678 مبلغ 1,250,000").suggestedTitle, "");
+});
+
+test("reads an amount the SMS names with no word the parser knows", () => {
+  const parsed = read("تراکنش کارت شما 1,250,000\nمانده 3,400,000");
+  assert.equal(parsed.amount, 1_250_000);
+  assert.equal(parsed.balance, 3_400_000);
+});
+
+test("reads thousands grouped with dots", () => {
+  const parsed = read("تراکنش کارت شما 1.250.000 ریال\nمانده 3.400.000 ریال");
+  assert.equal(parsed.amount, 1_250_000);
+  assert.equal(parsed.balance, 3_400_000);
+});
+
+test("text that never mentions money is not an SMS, numbers or not", () => {
+  assert.equal(parseBankSms("یادداشت جلسه فردا ساعت 10:30 اتاق 1,250,000"), null);
+  assert.equal(parseBankSms("https://example.com/order/1250000"), null);
+  assert.equal(looksLikeBankSms("یادداشت جلسه فردا"), false);
+  assert.equal(looksLikeBankSms("برداشت 1,250,000 ریال"), true);
 });
 
 test("an SMS the bank dated on an earlier day is turned away", () => {

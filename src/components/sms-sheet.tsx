@@ -6,10 +6,11 @@ import { Sheet } from "./sheet";
 import { useStore } from "./store";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 
-export function SmsSheet() {
+/** `text` is clipboard content the reader could not make sense of, shown so it can be fixed by hand. */
+export function SmsSheet({ text: initial = "" }: { text?: string }) {
   const { t, closeSheet, receiveSms } = useStore();
-  const [text, setText] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [text, setText] = useState(initial);
+  const [error, setError] = useState<string | null>(initial ? t.sms.notFound : null);
   const fieldId = useId();
 
   function submit(raw: string) {

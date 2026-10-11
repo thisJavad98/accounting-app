@@ -2,6 +2,7 @@
 
 import { ClipboardText, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { looksLikeBankSms } from "@/lib/sms-parser";
 import { useStore } from "./store";
 
 /** How long after the app comes to the foreground the paste offer stays up. */
@@ -51,20 +52,23 @@ export function ClipboardSmsBanner() {
 
   if (shownAt === null || sheet) return null;
 
-  // The clipboard holds whatever was copied last, which is often not a bank SMS at all, so its text is
-  // only used when it parses. Anything else opens an empty sheet for pasting by hand.
   async function paste() {
     // The offer stays armed: a second SMS can arrive while the app is still in the foreground, where iOS
     // fires no visibility change, so the bar has to be waiting again as soon as the sheet closes.
     setShownAt(Date.now());
+    let text: string;
     try {
-      const text = (await navigator.clipboard.readText()).trim();
-      if (text && receiveSms(text)) return;
-      notify(t.sms.clipboardNotSms, "error");
-      openSheet({ type: "sms" });
+      text = (await navigator.clipboard.readText()).trim();
     } catch {
       openSheet({ type: "sms" });
+      return;
     }
+    if (text && receiveSms(text)) return;
+    // Text about money that still would not read is carried into the sheet, where it can be corrected.
+    // Anything else was never an SMS, so it is left behind rather than passed off as a transaction.
+    const keep = looksLikeBankSms(text);
+    notify(keep ? t.sms.notFound : t.sms.clipboardNotSms, "error");
+    openSheet(keep ? { type: "sms", text } : { type: "sms" });
   }
 
   return (
