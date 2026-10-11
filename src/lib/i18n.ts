@@ -152,7 +152,7 @@ const fa = {
       },
       {
         title: "پیامک‌های بانک را مشخص کنید",
-        body: "در تریگر «When I receive a message»، گزینه Sender را به «Message» تغییر دهید و کلمه «مانده» را بنویسید؛ تقریبا همه پیامک‌های بانک این کلمه را دارند. بعد فلش کنار تریگر را بزنید و «Confirm Before Run» را خاموش کنید.",
+        body: "در تریگر «When I receive a message»، گزینه Sender را به «Message» تغییر دهید و کلمه «ریال» را بنویسید؛ تقریبا همه پیامک‌های بانک این کلمه را دارند. بعد فلش کنار تریگر را بزنید و «Confirm Before Run» را خاموش کنید.",
       },
       {
         title: "دو اکشن Copy to Clipboard و URL Encode",
