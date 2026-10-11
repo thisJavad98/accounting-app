@@ -195,7 +195,7 @@ const fa = {
     reject: "رد کردن",
     rejected: "پیامک رد شد و ثبت نشد",
     duplicate: "این پیامک قبلا ثبت شده است",
-    old: "این پیامک برای امروز نیست و ثبت نشد",
+    notToday: (day: string) => `این پیامک برای امروز نیست. با تأیید، در ${day} ثبت می‌شود.`,
   },
   toast: {
     saved: "ذخیره شد",
@@ -423,7 +423,7 @@ const en: Dictionary = {
     reject: "Reject",
     rejected: "SMS rejected, nothing was saved",
     duplicate: "This SMS is already saved",
-    old: "That SMS is not from today, so nothing was added",
+    notToday: (day: string) => `This SMS is not from today. Confirming files it on ${day}.`,
   },
   toast: {
     saved: "Saved",

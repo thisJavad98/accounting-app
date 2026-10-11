@@ -9,12 +9,13 @@ const MINUTE = 60_000;
  * What came of handing a piece of text to the SMS reader.
  *
  * `old` exists because the clipboard holds on to an SMS for days, so the app has to tell a message that
- * just arrived from one left over from last week. `duplicate` exists because the Shortcut hands the same
- * message over twice, once in the link and once through the clipboard.
+ * just arrived from one left over from last week. It still carries its transaction: an old SMS is worth
+ * keeping, it just belongs on the day the bank dated it. `duplicate` exists because the Shortcut hands
+ * the same message over twice, once in the link and once through the clipboard.
  */
 export type Intake =
   | { status: "unreadable" }
-  | { status: "old" }
+  | { status: "old"; tx: Transaction }
   | { status: "duplicate"; tx: Transaction }
   | { status: "ready"; tx: Transaction };
 
@@ -53,12 +54,13 @@ export function intakeSms(raw: string, currency: Currency, transactions: Transac
     balance: parsed.balance === null ? null : toCurrency(parsed.balance),
   };
 
+  const same = findSame(transactions, tx);
+  if (same) return { status: "duplicate", tx: same };
+
   // Only a date the bank spelled out can age an SMS. One carrying just a clock time, or no time at all,
   // is taken as having arrived now, because guessing it is old would throw away a real transaction.
-  if (parsed.dateStated && dayKey(new Date(tx.at)) !== todayKey()) return { status: "old" };
-
-  const same = findSame(transactions, tx);
-  return same ? { status: "duplicate", tx: same } : { status: "ready", tx };
+  const old = parsed.dateStated && dayKey(new Date(tx.at)) !== todayKey();
+  return { status: old ? "old" : "ready", tx };
 }
 
 /**

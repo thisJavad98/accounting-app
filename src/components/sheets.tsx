@@ -17,7 +17,9 @@ export function Sheets() {
       {sheet?.type === "sms" && <SmsSheet key="sms" text={sheet.text} />}
       {sheet?.type === "paste" && <SmsPasteSheet key="paste" />}
       {sheet?.type === "calendar" && <CalendarSheet key="calendar" />}
-      {sheet?.type === "confirm" && <ConfirmSmsSheet key={`confirm-${sheet.tx.id}`} tx={sheet.tx} sms={sheet.sms} />}
+      {sheet?.type === "confirm" && (
+        <ConfirmSmsSheet key={`confirm-${sheet.tx.id}`} tx={sheet.tx} sms={sheet.sms} old={sheet.old} />
+      )}
       {sheet?.type === "tx" && (
         <TransactionSheet key={`tx-${sheet.id ?? "new"}`} id={sheet.id} sms={sheet.sms} />
       )}

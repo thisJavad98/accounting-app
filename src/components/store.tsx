@@ -29,7 +29,7 @@ export type Sheet =
   | { type: "paste" }
   | { type: "calendar" }
   | { type: "tx"; id: string | null; sms?: string }
-  | { type: "confirm"; tx: Transaction; sms: string }
+  | { type: "confirm"; tx: Transaction; sms: string; old?: boolean }
   | null;
 
 type Toast = { id: number; message: string; tone: "neutral" | "error" };
@@ -74,7 +74,7 @@ type InitialState = {
   transactions: Transaction[];
   sheet: Sheet;
   incoming: boolean;
-  notice: "duplicate" | "old" | null;
+  notice: "duplicate" | null;
   raw: string | null;
 };
 
@@ -88,11 +88,16 @@ function createInitialState(): InitialState {
   const result = intakeSms(raw, settings.currency, transactions);
   switch (result.status) {
     case "ready":
-      return { ...base, sheet: { type: "confirm", tx: result.tx, sms: raw }, notice: null };
+    case "old":
+      return {
+        ...base,
+        sheet: { type: "confirm", tx: result.tx, sms: raw, old: result.status === "old" },
+        notice: null,
+      };
     case "unreadable":
       return { ...base, sheet: { type: "sms" }, notice: null };
     default:
-      return { ...base, sheet: null, notice: result.status };
+      return { ...base, sheet: null, notice: "duplicate" };
   }
 }
 
@@ -192,17 +197,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       switch (result.status) {
         case "unreadable":
           return false;
-        case "old":
-          setSheet(null);
-          notify(t.confirmSms.old);
-          break;
         case "duplicate":
           setSelectedDay(dayKey(new Date(result.tx.at)));
           setSheet(null);
           notify(t.confirmSms.duplicate);
           break;
         default:
-          setSheet({ type: "confirm", tx: result.tx, sms: raw });
+          setSheet({ type: "confirm", tx: result.tx, sms: raw, old: result.status === "old" });
       }
       return true;
     },

@@ -87,9 +87,19 @@ test("text that never mentions money is not an SMS, numbers or not", () => {
   assert.equal(looksLikeBankSms("برداشت 1,250,000 ریال"), true);
 });
 
-test("an SMS the bank dated on an earlier day is turned away", () => {
-  const result = intakeSms("برداشت 1,250,000 در 2020/01/15 ساعت 14:23 مانده 3,400,000", "IRT", []);
+const OLD_SMS = "برداشت 1,250,000 در 2020/01/15 ساعت 14:23 مانده 3,400,000";
+
+test("an SMS the bank dated on an earlier day keeps that day", () => {
+  const result = intakeSms(OLD_SMS, "IRT", []);
   assert.equal(result.status, "old");
+  assert.ok(result.status === "old");
+  assert.equal(dayKey(new Date(result.tx.at)), "2020-01-15");
+});
+
+test("an old SMS already saved is a duplicate, not offered again", () => {
+  const first = intakeSms(OLD_SMS, "IRT", []);
+  assert.ok(first.status === "old");
+  assert.equal(intakeSms(OLD_SMS, "IRT", [first.tx]).status, "duplicate");
 });
 
 test("an SMS with no date at all is taken as new", () => {
