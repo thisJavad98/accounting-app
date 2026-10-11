@@ -1,17 +1,8 @@
 "use client";
 
 import { ArrowUpRight, ChartDonut, ChatText, NotePencil } from "@phosphor-icons/react";
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { useRef } from "react";
 import type { LandingCopy } from "@/lib/landing-copy";
 import type { Locale } from "@/lib/types";
 import { MagneticLink } from "./magnetic-link";
@@ -147,19 +138,9 @@ export function Steps({ copy, locale }: { copy: LandingCopy; locale: Locale }) {
   );
 }
 
-export function FinalCta({
-  copy,
-  locale,
-  onVisibility,
-}: {
-  copy: LandingCopy;
-  locale: Locale;
-  onVisibility: (visible: boolean) => void;
-}) {
+export function FinalCta({ copy, locale }: { copy: LandingCopy; locale: Locale }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const inView = useInView(ref, { amount: 0.2 });
-  useEffect(() => onVisibility(inView), [inView, onVisibility]);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
   const scale = useTransform(scrollYProgress, [0, 1], [0.92, 1]);
   const radius = useTransform(scrollYProgress, [0, 1], [64, 28]);
@@ -205,35 +186,3 @@ export function FinalCta({
   );
 }
 
-export function FloatingCta({ copy, hidden }: { copy: LandingCopy; hidden: boolean }) {
-  const { scrollY } = useScroll();
-  const [past, setPast] = useState(false);
-  useMotionValueEvent(scrollY, "change", (value) => {
-    const next = value > window.innerHeight * 0.7;
-    if (next !== past) setPast(next);
-  });
-  const show = past && !hidden;
-
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]"
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        >
-          <MagneticLink
-            href="/app"
-            strength={0.2}
-            className="inline-flex h-14 w-full max-w-sm items-center justify-center gap-2 rounded-full bg-brand px-7 text-base font-bold text-on-brand shadow-[0_20px_40px_-14px_rgb(200_68_15/0.7)]"
-          >
-            {copy.openApp}
-            <ArrowUpRight size={20} weight="bold" className="rtl:-scale-x-100" aria-hidden />
-          </MagneticLink>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
