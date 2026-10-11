@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/*
+  Shape system: surfaces rounded-2xl (16px), bottom sheets 24px top corners,
+  inputs rounded-xl (12px), every button / chip is a full pill.
+  Z-index scale: nav 30, sheet 40, toast 50.
+*/
+
+:root {
+  --backdrop: #e4e4e7;
+  --bg: #fafafa;
+  --surface: #fefefe;
+  --sunken: #f1f1f2;
+  --ink: #18181b;
+  --muted: #52525b;
+  --faint: #a1a1aa;
+  --line: #e4e4e7;
+  --brand: #c8440f;
+  --on-brand: #fff7f2;
+  --brand-soft: #fcebe1;
+  --brand-ink: #9f350a;
+  --danger: #b42318;
+  --shadow: 24 24 27;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --backdrop: #050506;
+    --bg: #111113;
+    --surface: #1b1b1e;
+    --sunken: #232327;
+    --ink: #f4f4f5;
+    --muted: #a1a1aa;
+    --faint: #63636b;
+    --line: #2a2a2e;
+    --brand: #f07a3a;
+    --on-brand: #18181b;
+    --brand-soft: #3a2216;
+    --brand-ink: #f5a273;
+    --danger: #f97066;
+    --shadow: 0 0 0;
+  }
+}
+
+@theme inline {
+  --color-backdrop: var(--backdrop);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+  --font-latin: var(--font-geist), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[lang="en"] body {
+  font-family: var(--font-latin);
+}
+
+body {
+  background: var(--backdrop);
+  color: var(--ink);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
