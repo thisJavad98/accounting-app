@@ -161,7 +161,7 @@ const fa = {
       },
       {
         title: "تمام شد",
-        body: "از این به بعد با رسیدن هر پیامک بانک، برنامه دخل باز می‌شود و جزئیات تراکنش را نشان می‌دهد. با «تأیید و ثبت» به تاریخچه اضافه می‌شود. اگر پنجره باز نشد، «افزودن»، «از پیامک بانک» و بعد «چسباندن از کلیپ‌بورد» را بزنید.",
+        body: "از این به بعد با رسیدن هر پیامک بانک، برنامه دخل باز می‌شود و پنجره «پیامک بانک» از پایین بالا می‌آید. «چسباندن از کلیپ‌بورد» و بعد دکمه Paste آیفون را بزنید تا جزئیات تراکنش نشان داده شود، سپس «تأیید و ثبت» را بزنید تا به تاریخچه اضافه شود.",
       },
     ],
     linkLabel: "آدرس دخل برای Open URLs",
@@ -382,7 +382,7 @@ const en: Dictionary = {
       },
       {
         title: "You're done",
-        body: "From now on every bank SMS opens the Dakhl app with the transaction details. Tap Confirm to add it to your history. If the details don't open, tap Add, From bank SMS, then Paste from clipboard.",
+        body: "From now on every bank SMS opens the Dakhl app and a Bank SMS drawer slides up. Tap Paste from clipboard, then the iPhone's own Paste button, to see the transaction details, and tap Confirm to add it to your history.",
       },
     ],
     linkLabel: "Dakhl link for Open URLs",

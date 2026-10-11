@@ -58,6 +58,9 @@ type StoreValue = {
   rejectSms: () => void;
 };
 
+/** Quiet window between paste drawers, so switching back to the app does not reopen it every time. */
+const PROMPT_EVERY_MS = 30_000;
+
 const StoreContext = createContext<StoreValue | null>(null);
 
 export function useStore() {
@@ -95,6 +98,18 @@ function readIncomingSms(): string | null {
   const query = new URLSearchParams(location.search);
   const hash = new URLSearchParams(location.hash.slice(1));
   return query.get("sms") || query.get("text") || hash.get("sms") || null;
+}
+
+/**
+ * iOS launches a Home Screen web app at its `start_url` and throws away the path and query of the
+ * `webapp://` link, so a Shortcut cannot hand the SMS over that way. It copies the SMS instead, and the
+ * paste drawer below picks it up. Clipboard reads need a tap, so the drawer offers one.
+ */
+function isIosWebApp() {
+  return (
+    /iphone|ipad|ipod/i.test(navigator.userAgent) &&
+    ("standalone" in navigator ? navigator.standalone === true : matchMedia("(display-mode: standalone)").matches)
+  );
 }
 
 function stripIncomingSms() {
@@ -235,17 +250,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [notify, settings.currency, t, transactions],
   );
 
-  // A Home Screen web app that is already running is brought forward with the Shortcut's new URL instead of
-  // being reloaded, so the SMS has to be picked up again whenever the page resurfaces.
+  // A running Home Screen web app is brought forward with the Shortcut's URL instead of being reloaded, so
+  // the SMS is looked for again whenever the page resurfaces; on a cold start iOS drops it and the installed
+  // app falls back to the paste drawer.
   const handledSms = useRef(new Set(initial.raw ? [initial.raw] : []));
+  const promptedAt = useRef(0);
 
   useEffect(() => {
+    if (initial.incoming) promptedAt.current = Date.now();
     const check = () => {
       const raw = readIncomingSms();
-      if (!raw || handledSms.current.has(raw)) return;
-      handledSms.current.add(raw);
-      stripIncomingSms();
-      if (!receiveSms(raw)) setSheet({ type: "sms" });
+      if (raw && !handledSms.current.has(raw)) {
+        handledSms.current.add(raw);
+        promptedAt.current = Date.now();
+        stripIncomingSms();
+        if (!receiveSms(raw)) setSheet({ type: "sms" });
+        return;
+      }
+      if (raw || !isIosWebApp() || Date.now() - promptedAt.current < PROMPT_EVERY_MS) return;
+      promptedAt.current = Date.now();
+      setSheet((open) => open ?? { type: "sms" });
     };
     const onVisible = () => {
       if (document.visibilityState === "visible") check();
@@ -253,11 +277,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const events = ["pageshow", "popstate", "hashchange", "focus"] as const;
     for (const name of events) window.addEventListener(name, check);
     document.addEventListener("visibilitychange", onVisible);
+    check();
     return () => {
       for (const name of events) window.removeEventListener(name, check);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [receiveSms]);
+  }, [initial, receiveSms]);
 
   const confirmSms = useCallback(
     (tx: Transaction) => {

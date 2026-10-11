@@ -65,12 +65,12 @@ export function SmsSheet() {
           )}
         </div>
         <div className="flex flex-col gap-3">
-          <button type="submit" disabled={!text.trim()} className={primaryButton}>
-            {t.sms.read}
-          </button>
-          <button type="button" onClick={pasteFromClipboard} className={secondaryButton}>
+          <button type="button" onClick={pasteFromClipboard} className={primaryButton}>
             <ClipboardText size={20} aria-hidden />
             {t.sms.paste}
+          </button>
+          <button type="submit" disabled={!text.trim()} className={secondaryButton}>
+            {t.sms.read}
           </button>
         </div>
       </form>
