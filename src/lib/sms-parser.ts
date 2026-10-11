@@ -10,6 +10,8 @@ export type ParsedSms = {
   balance: number | null;
   /** Transaction time stated in the SMS, epoch ms. Null when the SMS has no usable date. */
   at: number | null;
+  /** True only when the SMS spelled out a calendar date; a bare clock time does not count. */
+  dateStated: boolean;
   holder: string;
   /** Last digits of the account or card mentioned, if any. */
   account: string;
@@ -89,13 +91,16 @@ const CATEGORY_HINTS: [CategoryId, RegExp][] = [
   ["shopping", /خرید|فروشگاه|\bpos\b|purchase|\bshop/i],
 ];
 
-const NUMBER = /([+-]?)\s*(\d{1,3}(?:[,٬]\d{3})+|\d+)(\.\d+)?\s*([+-]?)/g;
+// The lookarounds stop the hyphens of a card number (6104-3378-…) from being taken for minus signs.
+const NUMBER = /(?<!\d)([+-]?)\s*(\d{1,3}(?:[,٬]\d{3})+|\d+)(\.\d+)?\s*([+-]?)(?!\d)/g;
 const CURRENCY_AFTER = /^\s*(ریال|تومان|rials?|irr|toman|usd|eur|\$|€)/i;
 const CURRENCY_BEFORE = /(ریال|تومان|rials?|irr|toman|usd|eur|\$|€)\s*$/i;
 const ACCOUNT_BEFORE = /(حساب|کارت|account|acct|card|a\/c)\s*(شماره|no\.?|number)?\s*[:：#]?\s*$/i;
-const FULL_DATE = /(\d{2,4})[./-](\d{1,2})[./-](\d{1,2})/;
-const SHORT_DATE_TIME = /\b(\d{2})(\d{2})-(\d{1,2}):(\d{2})\b/;
-const TIME = /\b(\d{1,2}):(\d{2})\b/;
+// The lookarounds keep reference and card numbers such as 123456-07-19 from being read as a date.
+const FULL_DATE = /(?<![\d/.\-])(\d{1,4})[/.-](\d{1,2})[/.-](\d{1,4})(?!\d)/;
+const SHORT_DATE_TIME = /(?<!\d)(\d{2})(\d{2})-(\d{1,2}):(\d{2})(?!\d)/;
+const TIME = /(?<!\d)(\d{1,2}):(\d{2})(?::\d{2})?(?!\d)/;
+const MINUTE = 60_000;
 
 function normalize(text: string): string {
   return toLatinDigits(text)
@@ -120,15 +125,10 @@ function firstIndex(text: string, words: string[]) {
   return best;
 }
 
-/** Index right after the first keyword found in the line, or -1. */
-function keywordEnd(line: string, words: string[]) {
-  const lower = line.toLowerCase();
-  let best = -1;
-  for (const w of words) {
-    const i = lower.indexOf(w);
-    if (i !== -1 && (best === -1 || i < best)) best = i + w.length;
-  }
-  return best;
+/** The part of a line before it starts reporting the balance, which says nothing about this payment. */
+function beforeBalance(line: string) {
+  const cut = firstIndex(line, BALANCE_WORDS);
+  return cut === -1 ? line : line.slice(0, cut);
 }
 
 type Found = { value: number; sign: "+" | "-" | ""; index: number; end: number };
@@ -149,33 +149,51 @@ function numbersIn(line: string): Found[] {
   return found;
 }
 
-function extractDate(text: string): { at: number | null; rest: string } {
+function currentJalaliYear(): number {
+  return Number(
+    new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", { year: "numeric" })
+      .formatToParts(new Date())
+      .find((p) => p.type === "year")?.value,
+  );
+}
+
+/**
+ * Turns the three numbers of a written date into Gregorian [year, month, day].
+ * Banks write either the year or the day first, and the four-digit part says which; a two-digit year is
+ * Jalali, since no Iranian bank writes a Gregorian one. Returns null when the numbers cannot be a date.
+ */
+function toGregorian(a: number, b: number, c: number): [number, number, number] | null {
+  const yearLast = c > 31 || String(c).length === 4;
+  const [year, m, d] = yearLast ? [c, b, a] : [a, b, c];
+  const y = year < 100 ? year + 1400 : year;
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  return y >= 1900 ? [y, m, d] : jalaliToGregorian(y, m, d);
+}
+
+type ExtractedDate = {
+  /** Epoch ms of the moment the SMS describes, or null when it describes none. */
+  at: number | null;
+  /** Whether a calendar date, rather than only a clock time, was found. */
+  stated: boolean;
+  /** The text with the date and time taken out, so they cannot be mistaken for amounts. */
+  rest: string;
+};
+
+function extractDate(text: string): ExtractedDate {
   let rest = text;
   let date: [number, number, number] | null = null;
   let time: [number, number] | null = null;
 
   const full = rest.match(FULL_DATE);
   if (full) {
-    const [m, d] = [Number(full[2]), Number(full[3])];
-    let y = Number(full[1]);
-    if (y < 100) y += 1400;
-    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-      date = y >= 1900 ? [y, m, d] : jalaliToGregorian(y, m, d);
-    }
+    date = toGregorian(Number(full[1]), Number(full[2]), Number(full[3]));
     rest = rest.replace(full[0], " ");
   }
 
   const short = rest.match(SHORT_DATE_TIME);
   if (short) {
     const [m, d] = [Number(short[1]), Number(short[2])];
-    if (!date && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-      const jalaliYear = Number(
-        new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", { year: "numeric" })
-          .formatToParts(new Date())
-          .find((p) => p.type === "year")?.value,
-      );
-      date = jalaliToGregorian(jalaliYear, m, d);
-    }
+    if (!date && m >= 1 && m <= 12 && d >= 1 && d <= 31) date = jalaliToGregorian(currentJalaliYear(), m, d);
     time = [Number(short[3]), Number(short[4])];
     rest = rest.replace(short[0], " ");
   }
@@ -186,13 +204,15 @@ function extractDate(text: string): { at: number | null; rest: string } {
     rest = rest.replace(clock[0], " ");
   }
 
-  if (!date && !time) return { at: null, rest };
+  if (!date && !time) return { at: null, stated: false, rest };
+
   const now = new Date();
   const result = date ? new Date(date[0], date[1] - 1, date[2], 12) : new Date(now);
-  if (time && time[0] < 24 && time[1] < 60) result.setHours(time[0], time[1], 0, 0);
-  const at = result.getTime();
-  // A date in the future means we misread it; fall back to "now".
-  return { at: at > now.getTime() + 60_000 ? null : at, rest };
+  if (time && time[0] < 24 && time[1] < 60) result.setHours(time[0], time[1]);
+  result.setSeconds(0, 0);
+  // Anything ahead of now was misread. Saying nothing is safer than filing the money in the future.
+  if (result.getTime() > now.getTime() + MINUTE) return { at: null, stated: false, rest };
+  return { at: result.getTime(), stated: !!date, rest };
 }
 
 function detectBank(lines: string[], text: string): string {
@@ -222,17 +242,30 @@ function detectAccount(text: string): string {
   return digits.slice(-4);
 }
 
+/** Who the money went to or came from, as the SMS words it, so the saved row is not left untitled. */
+const MERCHANT = [
+  /(?:خرید از|پرداخت به|واریز از|انتقال به|انتقال از|بابت|از طرف)\s+([^\n\d:،,.]{2,30})/,
+  /\bat\s+([A-Z][\w&' ]{1,28}?)(?=[.,]|\s+on\b|\s+for\b|$)/,
+];
+/** Words that follow a name but belong to the next clause, and words that are never a name at all. */
+const TRAILING_WORD = /[\s-]+(به\s*)?(مبلغ|بمبلغ|ریال|تومان|amount|amt|of)\s*$/i;
+const NEVER_A_NAME = /^(کارت|حساب|شماره|سپرده|account|card|a\/c)(?![\p{L}\d])/iu;
+
 function suggestTitle(lines: string[], kindWords: string[]): string {
-  const merchant = lines.join(" ").match(/\bat\s+([A-Z][\w&' ]{1,28}?)(?=[.,]|\s+on\b|\s+for\b|$)/);
-  if (merchant) return merchant[1].trim();
+  for (const line of lines) {
+    for (const pattern of MERCHANT) {
+      const name = line.match(pattern)?.[1].replace(TRAILING_WORD, "").trim();
+      if (name && name.length >= 2 && !NEVER_A_NAME.test(name)) return name;
+    }
+  }
   const label = lines.find((l) => !/\d/.test(l) && l.length <= 30 && has(l, kindWords));
-  return label ?? "";
+  return label?.trim() ?? "";
 }
 
 /** Extracts every useful field from an Iranian or English bank SMS. Returns null if no amount is found. */
 export function parseBankSms(raw: string): ParsedSms | null {
   const normalized = normalize(raw);
-  const { at, rest } = extractDate(normalized);
+  const { at, stated, rest } = extractDate(normalized);
   const lines = rest
     .split(/\n|(?<=[.;])\s+/)
     .map((l) => l.trim())
@@ -243,22 +276,31 @@ export function parseBankSms(raw: string): ParsedSms | null {
   let best: { found: Found; score: number } | null = null;
   const amountKeywords = [...EXPENSE_WORDS, ...INCOME_WORDS, ...AMOUNT_WORDS];
 
+  // Every number is judged by the words standing between it and the number before it. Plenty of banks
+  // put the amount and the balance on one line, so a whole line can be neither one thing nor the other.
   for (const line of lines) {
     const nums = numbersIn(line).filter((n) => n.value > 0);
     if (!nums.length) continue;
 
-    if (has(line, BALANCE_WORDS)) {
-      balance ??= nums[nums.length - 1].value;
-      continue;
-    }
-
-    const after = keywordEnd(line, amountKeywords);
     const ignored = has(line, IGNORE_LINE);
+    let lineBalance: number | null = null;
+    let reportingBalance = false;
+    let cursor = 0;
+
     for (const n of nums) {
-      if (ACCOUNT_BEFORE.test(line.slice(Math.max(0, n.index - 24), n.index))) continue;
-      const currency = CURRENCY_AFTER.test(line.slice(n.end)) || CURRENCY_BEFORE.test(line.slice(0, n.index));
+      const label = line.slice(cursor, n.index);
+      cursor = n.end;
+      if (has(label, BALANCE_WORDS)) reportingBalance = true;
+      else if (has(label, amountKeywords)) reportingBalance = false;
+      if (ACCOUNT_BEFORE.test(label)) continue;
+      if (reportingBalance) {
+        lineBalance = n.value;
+        continue;
+      }
+
+      const currency = CURRENCY_AFTER.test(line.slice(n.end)) || CURRENCY_BEFORE.test(label);
       let score = 0;
-      if (after !== -1 && n.index >= after) score += 4;
+      if (has(label, amountKeywords)) score += 4;
       if (currency) score += 6;
       if (n.sign) score += 3;
       if (score === 0 && (ignored || String(Math.trunc(n.value)).length < 4)) continue;
@@ -267,12 +309,13 @@ export function parseBankSms(raw: string): ParsedSms | null {
         best = { found: n, score };
       }
     }
+    balance ??= lineBalance;
   }
   if (!best) return null;
 
-  const bodyWithoutBalance = lines.filter((l) => !has(l, BALANCE_WORDS)).join("\n");
-  const expenseAt = firstIndex(bodyWithoutBalance, EXPENSE_WORDS);
-  const incomeAt = firstIndex(bodyWithoutBalance, INCOME_WORDS);
+  const body = lines.map(beforeBalance).join("\n");
+  const expenseAt = firstIndex(body, EXPENSE_WORDS);
+  const incomeAt = firstIndex(body, INCOME_WORDS);
   let kind: TxKind;
   if (best.found.sign) kind = best.found.sign === "+" ? "income" : "expense";
   else if (expenseAt !== -1 && (incomeAt === -1 || expenseAt < incomeAt)) kind = "expense";
@@ -289,6 +332,7 @@ export function parseBankSms(raw: string): ParsedSms | null {
     bank: detectBank(lines, normalized),
     balance,
     at,
+    dateStated: stated,
     holder: detectHolder(normalized),
     account: detectAccount(normalized),
     suggestedTitle: suggestTitle(lines, kind === "income" ? INCOME_WORDS : EXPENSE_WORDS),

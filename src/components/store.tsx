@@ -19,9 +19,8 @@ import {
   saveTransactions,
 } from "@/lib/cookie-store";
 import { dayKey, todayKey, type DayKey } from "@/lib/dates";
-import { newId } from "@/lib/format";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
-import { parseBankSms } from "@/lib/sms-parser";
+import { intakeSms, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
 import type { Currency, Locale, Settings, Theme, Transaction } from "@/lib/types";
 
 export type Sheet =
@@ -66,60 +65,6 @@ export function useStore() {
   return value;
 }
 
-function smsToTransaction(raw: string, currency: Currency): Transaction | null {
-  const parsed = parseBankSms(raw);
-  if (!parsed) return null;
-  const toCurrency = (value: number) => (currency === "IRT" && parsed.inRial ? Math.round(value / 10) : value);
-  return {
-    id: newId(),
-    kind: parsed.kind,
-    amount: toCurrency(parsed.amount),
-    at: parsed.at ?? Date.now(),
-    title: parsed.suggestedTitle.trim() || parsed.bank,
-    note: "",
-    category: parsed.category,
-    bank: parsed.bank,
-    balance: parsed.balance === null ? null : toCurrency(parsed.balance),
-  };
-}
-
-/**
- * The same SMS handed over twice (link and clipboard) parses identically, so it is matched on every field.
- * Two different payments can share an amount and a minute, and the balance left over tells them apart.
- */
-function findSame(transactions: Transaction[], tx: Transaction) {
-  return transactions.find(
-    (item) =>
-      item.at === tx.at &&
-      item.amount === tx.amount &&
-      item.kind === tx.kind &&
-      item.bank === tx.bank &&
-      item.balance === tx.balance,
-  );
-}
-
-/**
- * The clipboard keeps an SMS around for days, so only a message the bank dated today counts as new.
- * An SMS that states no date at all is given the current time by the parser and so passes.
- */
-function arrivedToday(tx: Transaction) {
-  return dayKey(new Date(tx.at)) === todayKey();
-}
-
-/** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=` or `#sms=`). */
-function readIncomingSms(): string | null {
-  const query = new URLSearchParams(location.search);
-  const hash = new URLSearchParams(location.hash.slice(1));
-  return query.get("sms") || query.get("text") || hash.get("sms") || null;
-}
-
-function stripIncomingSms() {
-  const url = new URL(location.href);
-  for (const key of ["sms", "text", "title"]) url.searchParams.delete(key);
-  if (new URLSearchParams(url.hash.slice(1)).has("sms")) url.hash = "";
-  history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-}
-
 type InitialState = {
   settings: Settings;
   transactions: Transaction[];
@@ -133,18 +78,18 @@ function createInitialState(): InitialState {
   const settings = loadSettings();
   const transactions = loadTransactions();
   const raw = readIncomingSms();
-  const tx = raw ? smsToTransaction(raw, settings.currency) : null;
   const base = { settings, transactions, incoming: !!raw, raw };
-  if (raw && tx && !arrivedToday(tx)) {
-    return { ...base, sheet: null, notice: "old" };
+  if (!raw) return { ...base, sheet: null, notice: null };
+
+  const result = intakeSms(raw, settings.currency, transactions);
+  switch (result.status) {
+    case "ready":
+      return { ...base, sheet: { type: "confirm", tx: result.tx, sms: raw }, notice: null };
+    case "unreadable":
+      return { ...base, sheet: { type: "sms" }, notice: null };
+    default:
+      return { ...base, sheet: null, notice: result.status };
   }
-  if (raw && tx && findSame(transactions, tx)) {
-    return { ...base, sheet: null, notice: "duplicate" };
-  }
-  if (raw && tx) {
-    return { ...base, sheet: { type: "confirm", tx, sms: raw }, notice: null };
-  }
-  return { ...base, sheet: raw ? { type: "sms" } : null, notice: null };
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -239,18 +184,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const receiveSms = useCallback(
     (raw: string) => {
-      const tx = smsToTransaction(raw, settings.currency);
-      if (!tx) return false;
-      const same = findSame(transactions, tx);
-      if (!arrivedToday(tx)) {
-        setSheet(null);
-        notify(t.confirmSms.old);
-      } else if (same) {
-        setSelectedDay(dayKey(new Date(same.at)));
-        setSheet(null);
-        notify(t.confirmSms.duplicate);
-      } else {
-        setSheet({ type: "confirm", tx, sms: raw });
+      const result = intakeSms(raw, settings.currency, transactions);
+      switch (result.status) {
+        case "unreadable":
+          return false;
+        case "old":
+          setSheet(null);
+          notify(t.confirmSms.old);
+          break;
+        case "duplicate":
+          setSelectedDay(dayKey(new Date(result.tx.at)));
+          setSheet(null);
+          notify(t.confirmSms.duplicate);
+          break;
+        default:
+          setSheet({ type: "confirm", tx: result.tx, sms: raw });
       }
       return true;
     },
