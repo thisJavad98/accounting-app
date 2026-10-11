@@ -9,7 +9,8 @@ import { useStore } from "./store";
 export function TransactionRow({ tx, showTime = true }: { tx: Transaction; showTime?: boolean }) {
   const { t, settings, openSheet } = useStore();
   const untitled = !tx.title;
-  const meta = [showTime ? formatTime(tx.at, settings.locale) : "", tx.note || tx.bank]
+  const bank = tx.bank === tx.title ? "" : tx.bank;
+  const meta = [showTime ? formatTime(tx.at, settings.locale) : "", tx.note || bank]
     .filter(Boolean)
     .join("  |  ");
 

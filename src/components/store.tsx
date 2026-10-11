@@ -75,7 +75,7 @@ function smsToTransaction(raw: string, currency: Currency): Transaction | null {
     kind: parsed.kind,
     amount: toCurrency(parsed.amount),
     at: parsed.at ?? Date.now(),
-    title: "",
+    title: parsed.suggestedTitle.trim() || parsed.bank,
     note: "",
     category: parsed.category,
     bank: parsed.bank,
@@ -98,6 +98,14 @@ function findSame(transactions: Transaction[], tx: Transaction) {
   );
 }
 
+/**
+ * The clipboard keeps an SMS around for days, so only a message the bank dated today counts as new.
+ * An SMS that states no date at all is given the current time by the parser and so passes.
+ */
+function arrivedToday(tx: Transaction) {
+  return dayKey(new Date(tx.at)) === todayKey();
+}
+
 /** Reads a bank SMS handed over by the Android share sheet (`?text=`) or an iOS Shortcut (`?sms=` or `#sms=`). */
 function readIncomingSms(): string | null {
   const query = new URLSearchParams(location.search);
@@ -117,7 +125,7 @@ type InitialState = {
   transactions: Transaction[];
   sheet: Sheet;
   incoming: boolean;
-  duplicate: boolean;
+  notice: "duplicate" | "old" | null;
   raw: string | null;
 };
 
@@ -126,14 +134,17 @@ function createInitialState(): InitialState {
   const transactions = loadTransactions();
   const raw = readIncomingSms();
   const tx = raw ? smsToTransaction(raw, settings.currency) : null;
-  const same = tx && findSame(transactions, tx);
-  if (raw && same) {
-    return { settings, transactions, sheet: null, incoming: true, duplicate: true, raw };
+  const base = { settings, transactions, incoming: !!raw, raw };
+  if (raw && tx && !arrivedToday(tx)) {
+    return { ...base, sheet: null, notice: "old" };
+  }
+  if (raw && tx && findSame(transactions, tx)) {
+    return { ...base, sheet: null, notice: "duplicate" };
   }
   if (raw && tx) {
-    return { settings, transactions, sheet: { type: "confirm", tx, sms: raw }, incoming: true, duplicate: false, raw };
+    return { ...base, sheet: { type: "confirm", tx, sms: raw }, notice: null };
   }
-  return { settings, transactions, sheet: raw ? { type: "sms" } : null, incoming: !!raw, duplicate: false, raw };
+  return { ...base, sheet: raw ? { type: "sms" } : null, notice: null };
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -145,8 +156,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
   const [sheet, setSheet] = useState<Sheet>(initial.sheet);
   const [toast, setToast] = useState<Toast | null>(() =>
-    initial.duplicate
-      ? { id: 0, message: dictionaries[initial.settings.locale].confirmSms.duplicate, tone: "neutral" }
+    initial.notice
+      ? { id: 0, message: dictionaries[initial.settings.locale].confirmSms[initial.notice], tone: "neutral" }
       : null,
   );
   const toastId = useRef(0);
@@ -231,7 +242,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const tx = smsToTransaction(raw, settings.currency);
       if (!tx) return false;
       const same = findSame(transactions, tx);
-      if (same) {
+      if (!arrivedToday(tx)) {
+        setSheet(null);
+        notify(t.confirmSms.old);
+      } else if (same) {
         setSelectedDay(dayKey(new Date(same.at)));
         setSheet(null);
         notify(t.confirmSms.duplicate);

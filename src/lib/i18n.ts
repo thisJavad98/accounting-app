@@ -193,6 +193,7 @@ const fa = {
     reject: "رد کردن",
     rejected: "پیامک رد شد و ثبت نشد",
     duplicate: "این پیامک قبلا ثبت شده است",
+    old: "این پیامک برای امروز نیست و ثبت نشد",
   },
   toast: {
     saved: "ذخیره شد",
@@ -418,6 +419,7 @@ const en: Dictionary = {
     reject: "Reject",
     rejected: "SMS rejected, nothing was saved",
     duplicate: "This SMS is already saved",
+    old: "That SMS is not from today, so nothing was added",
   },
   toast: {
     saved: "Saved",
