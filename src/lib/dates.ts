@@ -1,3 +1,4 @@
+import { jalaliToGregorian } from "./format";
 import type { Locale } from "./types";
 
 /** Day keys are local Gregorian `YYYY-MM-DD` strings, independent of display calendar. */
@@ -68,6 +69,35 @@ export function shiftMonth(key: DayKey, locale: Locale, direction: 1 | -1): DayK
   const days = monthDays(key, locale);
   const edge = direction === 1 ? addDays(days[days.length - 1], 1) : addDays(days[0], -1);
   return monthDays(edge, locale)[0];
+}
+
+/** Year and 1-based month of `key` in the locale's calendar. */
+export function monthParts(key: DayKey, locale: Locale): { year: number; month: number } {
+  const [year, month] = monthId(key, locale).split("-").map(Number);
+  return { year, month };
+}
+
+/** First day of a month given in the locale's calendar. */
+export function monthStart(year: number, month: number, locale: Locale): DayKey {
+  if (locale === "fa") {
+    const [gy, gm, gd] = jalaliToGregorian(year, month, 1);
+    return dayKey(new Date(gy, gm - 1, gd, 12));
+  }
+  return dayKey(new Date(year, month - 1, 1, 12));
+}
+
+/** Column of `key` in a week that starts on Saturday (fa) or Sunday (en). */
+export function weekdayIndex(key: DayKey, locale: Locale) {
+  const day = fromDayKey(key).getDay();
+  return locale === "fa" ? (day + 1) % 7 : day;
+}
+
+export function formatMonthName(key: DayKey, locale: Locale) {
+  return formatter(displayLocale(locale), { month: "long" }).format(fromDayKey(key));
+}
+
+export function formatYear(key: DayKey, locale: Locale) {
+  return formatter(displayLocale(locale), { year: "numeric" }).format(fromDayKey(key));
 }
 
 export function formatMonth(key: DayKey, locale: Locale) {

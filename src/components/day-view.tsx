@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretLeft, CaretRight, ChatText, NotePencil, Tray } from "@phosphor-icons/react";
+import { CalendarBlank, CaretDown, CaretLeft, CaretRight, ChatText, NotePencil, Tray } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo } from "react";
 import {
@@ -62,7 +62,16 @@ export function DayView() {
           <LogoMark size={28} className="rounded-lg" />
           {t.appName}
         </span>
-        <span className="text-sm font-medium text-muted">{formatMonth(selectedDay, locale)}</span>
+        <button
+          type="button"
+          onClick={() => openSheet({ type: "calendar" })}
+          aria-label={`${t.day.openCalendar}, ${formatMonth(selectedDay, locale)}`}
+          className="-me-2 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted transition-colors active:bg-sunken"
+        >
+          <CalendarBlank size={16} weight="bold" aria-hidden />
+          {formatMonth(selectedDay, locale)}
+          <CaretDown size={12} weight="bold" aria-hidden />
+        </button>
       </header>
 
       <div className="flex items-center gap-1">

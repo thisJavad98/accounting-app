@@ -27,6 +27,7 @@ import type { Currency, Locale, Settings, Theme, Transaction } from "@/lib/types
 export type Sheet =
   | { type: "add" }
   | { type: "sms" }
+  | { type: "calendar" }
   | { type: "tx"; id: string | null; sms?: string }
   | null;
 

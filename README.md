@@ -24,7 +24,7 @@ Browsers cannot read SMS directly, so there are three ways in:
 
 - **Paste**: tap Add, then From bank SMS, and paste the text (or use the clipboard button).
 - **Android**: install the app as a PWA, then share an SMS to Dakhl. The manifest `share_target` opens `/app?text=...`.
-- **iPhone**: create a Shortcuts automation on messages from your bank that opens `https://accounting-app-lemon-nine.vercel.app/app?sms=[Message]`.
+- **iPhone**: create a Shortcuts automation on messages from your bank that runs URL Encode on the message, then Open URLs with `https://accounting-app-lemon-nine.vercel.app/app?sms=` followed by the encoded text. Settings shows the steps and always copies this production link, even when the app runs on localhost.
 
 The SMS is read on the device, no server or AI service involved: amount, income or expense, bank, balance, date and time (Jalali or Gregorian), account digits, holder name, a suggested title and a category are extracted automatically. Every incoming SMS is saved right away, then a sheet asks for a title and the reason for the payment. If you tap Later, it stays in the "waiting for a title" banner.
 

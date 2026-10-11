@@ -18,6 +18,7 @@ import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { exportJson, parseBackup, STORAGE_CAPACITY, storageUsed } from "@/lib/cookie-store";
 import { dayKey, fromDayKey, todayKey } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
+import { SHORTCUT_URL } from "@/lib/site";
 import type { Currency, Locale, Theme, Transaction } from "@/lib/types";
 import type { Dictionary } from "@/lib/i18n";
 import { LogoMark } from "./logo";
@@ -121,7 +122,7 @@ export function SettingsView() {
   const fileRef = useRef<HTMLInputElement>(null);
   const locale = settings.locale;
 
-  const shortcutUrl = `${location.origin}/app?sms=`;
+  const shortcutUrl = SHORTCUT_URL;
   // Recomputed whenever transactions change, since every change rewrites the cookies.
   const used = useMemo(() => (transactions ? storageUsed() : 0), [transactions]);
   const ratio = used / STORAGE_CAPACITY;
@@ -225,11 +226,23 @@ export function SettingsView() {
         <div className="flex flex-col gap-4 rounded-2xl bg-sunken p-4 text-sm leading-relaxed">
           <p className="font-medium">{t.settings.smsAuto}</p>
           <p>{t.settings.smsAndroid}</p>
-          <p>{t.settings.smsIos}</p>
+          <div className="flex flex-col gap-2.5">
+            <p className="font-semibold">{t.settings.smsIos}</p>
+            <ol className="flex flex-col gap-2">
+              {t.settings.smsIosSteps.map((step, i) => (
+                <li key={i} className="flex gap-2.5">
+                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-brand-ink tabular-nums">
+                    {formatNumber(i + 1, locale)}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
           <div className="flex items-center gap-2 rounded-xl bg-surface p-1.5 ps-3">
             <code dir="ltr" className="min-w-0 flex-1 text-start font-mono text-xs break-all">
               {shortcutUrl}
-              <span className="text-brand-ink">[Message]</span>
+              <span className="text-brand-ink">[URL Encoded Text]</span>
             </code>
             <button
               type="button"
@@ -240,6 +253,7 @@ export function SettingsView() {
               {copied ? t.settings.copied : t.settings.copy}
             </button>
           </div>
+          <p className="text-muted">{t.settings.smsIosNote}</p>
         </div>
       </Section>
 
