@@ -1,8 +1,8 @@
 "use client";
 
 import { CalendarBlank, CaretDown, CaretLeft, CaretRight, ChatText, NotePencil, Tray } from "@phosphor-icons/react";
-import { motion, useReducedMotion } from "motion/react";
-import { useMemo } from "react";
+import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "motion/react";
+import { useMemo, useState } from "react";
 import {
   addDays,
   dayKey,
@@ -20,6 +20,18 @@ import { primaryButton, secondaryButton } from "./ui";
 import { LogoMark } from "./logo";
 import { useRouter } from "next/navigation";
 
+/** A drag is a day change once it passes either of these. */
+const SWIPE_DISTANCE = 56;
+const SWIPE_VELOCITY = 400;
+
+type Slide = { direction: number; distance: number };
+
+const slide = {
+  enter: ({ direction, distance }: Slide) => ({ x: `${direction * distance}%`, opacity: 0 }),
+  center: { x: "0%", opacity: 1 },
+  exit: ({ direction, distance }: Slide) => ({ x: `${-direction * distance}%`, opacity: 0 }),
+};
+
 export function DayView() {
   const { t, settings, transactions, selectedDay, setSelectedDay, openSheet } = useStore();
   const reduce = useReducedMotion();
@@ -29,6 +41,8 @@ export function DayView() {
   const rtl = locale === "fa";
   const Prev = rtl ? CaretRight : CaretLeft;
   const Next = rtl ? CaretLeft : CaretRight;
+  /** Screen direction a later day travels in: rightwards in LTR, leftwards in RTL. */
+  const forward = rtl ? -1 : 1;
 
   const byDay = useMemo(() => {
     const map = new Map<string, typeof transactions>();
@@ -57,6 +71,25 @@ export function DayView() {
   const relative =
     selectedDay === today ? t.day.today : selectedDay === addDays(today, -1) ? t.day.yesterday : null;
 
+  // The panel slides in from whichever side the new day sits on, no matter what changed the day.
+  const [shown, setShown] = useState({ day: selectedDay, direction: forward });
+  if (shown.day !== selectedDay) {
+    setShown({ day: selectedDay, direction: selectedDay > shown.day ? forward : -forward });
+  }
+  const custom: Slide = { direction: shown.direction, distance: reduce ? 0 : 100 };
+
+  function goDay(step: 1 | -1) {
+    if (step === 1 && selectedDay >= today) return;
+    setSelectedDay(addDays(selectedDay, step));
+  }
+
+  function onSwipe(_: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) {
+    if (Math.abs(offset.x) < SWIPE_DISTANCE && Math.abs(velocity.x) < SWIPE_VELOCITY) return;
+    // Dragging the panel against `forward` pulls the later day in from that side.
+    const toward = Math.sign(Math.abs(offset.x) > 8 ? offset.x : velocity.x);
+    goDay(toward === forward ? -1 : 1);
+  }
+
   return (
     <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <header className="flex items-center justify-between">
@@ -80,7 +113,7 @@ export function DayView() {
         <button
           type="button"
           aria-label={t.day.prevDay}
-          onClick={() => setSelectedDay(addDays(selectedDay, -1))}
+          onClick={() => goDay(-1)}
           className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted active:bg-sunken"
         >
           <Prev size={18} aria-hidden />
@@ -117,89 +150,101 @@ export function DayView() {
           type="button"
           aria-label={t.day.nextDay}
           disabled={selectedDay >= today}
-          onClick={() => setSelectedDay(addDays(selectedDay, 1))}
+          onClick={() => goDay(1)}
           className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted active:bg-sunken disabled:opacity-30"
         >
           <Next size={18} aria-hidden />
         </button>
       </div>
 
-      <motion.section
-        key={selectedDay}
-        initial={reduce ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col gap-2"
-      >
-        <h1 className="text-sm font-medium text-muted">
-          {relative ? `${relative}${rtl ? "، " : ", "}` : ""}
-          {formatDayLong(selectedDay, locale)}
-        </h1>
-        <p className="text-sm font-semibold">{t.day.spent}</p>
-        <Money value={spent} className="text-4xl font-black tracking-tight" unitClassName="text-base font-semibold text-muted" />
-        {(received > 0 || dayTxs.length > 0) && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-            {received > 0 && (
-              <span className="inline-flex items-center gap-1">
-                {t.day.income}
-                <Money value={received} sign="+" className="font-semibold text-brand-ink" unitClassName="text-xs" />
-              </span>
+      <div className="relative -mx-5 overflow-x-clip px-5">
+        <AnimatePresence initial={false} mode="popLayout" custom={custom}>
+          <motion.div
+            key={selectedDay}
+            custom={custom}
+            variants={slide}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 420, damping: 44 },
+              opacity: { duration: 0.2 },
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.22}
+            dragMomentum={false}
+            onDragEnd={onSwipe}
+            className="flex flex-col gap-7"
+          >
+            <section className="flex flex-col gap-2">
+              <h1 className="text-sm font-medium text-muted">
+                {relative ? `${relative}${rtl ? "، " : ", "}` : ""}
+                {formatDayLong(selectedDay, locale)}
+              </h1>
+              <p className="text-sm font-semibold">{t.day.spent}</p>
+              <Money value={spent} className="text-4xl font-black tracking-tight" unitClassName="text-base font-semibold text-muted" />
+              {(received > 0 || dayTxs.length > 0) && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                  {received > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      {t.day.income}
+                      <Money value={received} sign="+" className="font-semibold text-brand-ink" unitClassName="text-xs" />
+                    </span>
+                  )}
+                  <span>{t.day.entries(formatNumber(dayTxs.length, locale))}</span>
+                </div>
+              )}
+            </section>
+
+            {untitled.length > 0 && (
+              <button
+                type="button"
+                onClick={() => openSheet({ type: "tx", id: untitled[0].id })}
+                className="flex items-center gap-3 rounded-2xl bg-brand-soft px-4 py-3 text-start text-brand-ink transition-transform active:scale-[0.98]"
+              >
+                <ChatText size={22} weight="duotone" className="shrink-0" aria-hidden />
+                <span className="flex-1 text-sm font-semibold">
+                  {t.day.needsTitle(formatNumber(untitled.length, locale))}
+                </span>
+                <span className="rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-on-brand">
+                  {t.day.needsTitleAction}
+                </span>
+              </button>
             )}
-            <span>{t.day.entries(formatNumber(dayTxs.length, locale))}</span>
-          </div>
-        )}
-      </motion.section>
 
-      {untitled.length > 0 && (
-        <button
-          type="button"
-          onClick={() => openSheet({ type: "tx", id: untitled[0].id })}
-          className="flex items-center gap-3 rounded-2xl bg-brand-soft px-4 py-3 text-start text-brand-ink transition-transform active:scale-[0.98]"
-        >
-          <ChatText size={22} weight="duotone" className="shrink-0" aria-hidden />
-          <span className="flex-1 text-sm font-semibold">
-            {t.day.needsTitle(formatNumber(untitled.length, locale))}
-          </span>
-          <span className="rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-on-brand">
-            {t.day.needsTitleAction}
-          </span>
-        </button>
-      )}
-
-      {dayTxs.length > 0 ? (
-        <ul className="-mt-2 flex flex-col">
-          {dayTxs.map((tx, i) => (
-            <motion.li
-              key={tx.id}
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <TransactionRow tx={tx} />
-            </motion.li>
-          ))}
-        </ul>
-      ) : (
-        <section className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-line px-5 py-7">
-          <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-sunken text-muted">
-            <Tray size={26} weight="duotone" aria-hidden />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h2 className="font-bold">{t.day.emptyTitle}</h2>
-            <p className="text-sm leading-relaxed text-muted">{t.day.emptyBody}</p>
-          </div>
-          <div className="grid w-full grid-cols-2 gap-2">
-            <button type="button" onClick={() => openSheet({ type: "sms" })} className={`${primaryButton} h-11 px-4 text-sm`}>
-              <ChatText size={18} aria-hidden />
-              {t.add.fromSms}
-            </button>
-            <button type="button" onClick={() => openSheet({ type: "tx", id: null })} className={`${secondaryButton} h-11 px-4 text-sm`}>
-              <NotePencil size={18} aria-hidden />
-              {t.add.manual}
-            </button>
-          </div>
-        </section>
-      )}
+            {dayTxs.length > 0 ? (
+              <ul className="-mt-2 flex flex-col">
+                {dayTxs.map((tx) => (
+                  <li key={tx.id}>
+                    <TransactionRow tx={tx} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <section className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-line px-5 py-7">
+                <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-sunken text-muted">
+                  <Tray size={26} weight="duotone" aria-hidden />
+                </span>
+                <div className="flex flex-col gap-1">
+                  <h2 className="font-bold">{t.day.emptyTitle}</h2>
+                  <p className="text-sm leading-relaxed text-muted">{t.day.emptyBody}</p>
+                </div>
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <button type="button" onClick={() => openSheet({ type: "sms" })} className={`${primaryButton} h-11 px-4 text-sm`}>
+                    <ChatText size={18} aria-hidden />
+                    {t.add.fromSms}
+                  </button>
+                  <button type="button" onClick={() => openSheet({ type: "tx", id: null })} className={`${secondaryButton} h-11 px-4 text-sm`}>
+                    <NotePencil size={18} aria-hidden />
+                    {t.add.manual}
+                  </button>
+                </div>
+              </section>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
