@@ -190,7 +190,7 @@ const fa = {
   },
   confirmSms: {
     title: "پیامک بانک رسید",
-    body: "اطلاعات خوانده‌شده را بررسی کنید. فقط با تأیید شما ثبت می‌شود.",
+    body: "عنوان، توضیح و دسته را تنظیم کنید. فقط با تأیید شما ثبت می‌شود.",
     accept: "تأیید و ثبت",
     reject: "رد کردن",
     rejected: "پیامک رد شد و ثبت نشد",
@@ -418,7 +418,7 @@ const en: Dictionary = {
   },
   confirmSms: {
     title: "Bank SMS received",
-    body: "Check what was read from it. Nothing is saved until you confirm.",
+    body: "Set the title, note and category. Nothing is saved until you confirm.",
     accept: "Confirm",
     reject: "Reject",
     rejected: "SMS rejected, nothing was saved",
