@@ -5,7 +5,7 @@ import { landingCopy } from "@/lib/landing-copy";
 import { Bento } from "./bento";
 import { Hero } from "./hero";
 import { LandingNav } from "./nav";
-import { BankMarquee, FinalCta, Manifesto, Steps } from "./sections";
+import { BankMarquee, FinalCta, Manifesto, SavingsShowcase, Steps } from "./sections";
 import { SmsStory } from "./sms-story";
 import { useLandingLocale } from "./use-locale";
 
@@ -25,6 +25,7 @@ export function Landing() {
       <main>
         <Hero copy={copy} locale={locale} />
         <SmsStory copy={copy} />
+        <SavingsShowcase copy={copy} locale={locale} />
         <Bento copy={copy} locale={locale} />
         <BankMarquee copy={copy} />
         <Manifesto copy={copy} />

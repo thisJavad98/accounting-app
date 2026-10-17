@@ -1,11 +1,22 @@
 "use client";
 
-import { ArrowUpRight, ChartDonut, ChatText, NotePencil } from "@phosphor-icons/react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChartDonut,
+  ChatText,
+  NotePencil,
+  PiggyBank,
+  Prohibit,
+  Trash,
+} from "@phosphor-icons/react";
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { formatNumber } from "@/lib/format";
 import type { LandingCopy } from "@/lib/landing-copy";
 import type { Locale } from "@/lib/types";
+import { CategoryIcon } from "../category-icon";
 import { MagneticLink } from "./magnetic-link";
 import { PhoneFrame, Screenshot, type Shot } from "./phone";
 import { setLandingLocale } from "./use-locale";
@@ -36,6 +47,247 @@ const BANK_MARKS: { logo?: string; color: string }[] = [
   { color: "#7B1FA2" },
   { logo: "sina", color: "#455A64" },
 ];
+
+export function SavingsShowcase({ copy, locale }: { copy: LandingCopy; locale: Locale }) {
+  const s = copy.savings;
+  const c = s.card;
+  const reduce = useReducedMotion();
+
+  const [unnecessaryMap, setUnnecessaryMap] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(c.items.map((item) => [item.id, item.defaultUnnecessary])),
+  );
+  const [deletedIds, setDeletedIds] = useState<Record<string, boolean>>({});
+
+  const visibleItems = c.items.filter((item) => !deletedIds[item.id]);
+  const totalBuys = visibleItems.reduce((sum, item) => sum + item.amount, 0);
+  const unnecessaryTotal = visibleItems
+    .filter((item) => unnecessaryMap[item.id])
+    .reduce((sum, item) => sum + item.amount, 0);
+  const deletedSavings = c.items
+    .filter((item) => deletedIds[item.id])
+    .reduce((sum, item) => sum + item.amount, 0);
+  const necessaryTotal = Math.max(0, totalBuys - unnecessaryTotal);
+  const canSave = Math.max(unnecessaryTotal + deletedSavings, c.incomeAmount - necessaryTotal);
+  const savingsPct = Math.min(100, Math.max(0, Math.round((canSave / c.incomeAmount) * 100)));
+  const totalCutSavings = unnecessaryTotal + deletedSavings;
+
+  const necessaryShare = Math.min(100, (necessaryTotal / c.incomeAmount) * 100);
+  const cutShare = Math.min(100 - necessaryShare, (totalCutSavings / c.incomeAmount) * 100);
+
+  function toggleItem(id: string) {
+    setUnnecessaryMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function deleteUnnecessaryItems() {
+    const nextDeleted = { ...deletedIds };
+    let count = 0;
+    for (const item of visibleItems) {
+      if (unnecessaryMap[item.id]) {
+        nextDeleted[item.id] = true;
+        count += 1;
+      }
+    }
+    if (count > 0) {
+      setDeletedIds(nextDeleted);
+    } else {
+      // Reset demo if all were deleted
+      setDeletedIds({});
+      setUnnecessaryMap(Object.fromEntries(c.items.map((item) => [item.id, item.defaultUnnecessary])));
+    }
+  }
+
+  const hasMarkedVisible = visibleItems.some((item) => unnecessaryMap[item.id]);
+
+  return (
+    <section className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col items-start gap-6"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-1.5 text-xs font-bold text-brand-ink">
+            <PiggyBank size={16} weight="fill" aria-hidden />
+            {s.eyebrow}
+          </span>
+          <h2 className="text-3xl leading-[1.2] font-black tracking-tight text-balance md:text-5xl">
+            {s.title}
+          </h2>
+          <p className="max-w-[48ch] text-base leading-relaxed text-muted md:text-lg">{s.body}</p>
+          <MagneticLink
+            href="/app/reports"
+            className="inline-flex h-13 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-on-brand shadow-[0_14px_30px_-14px_rgb(200_68_15/0.75)]"
+          >
+            {s.cta}
+            <ArrowUpRight size={18} weight="bold" className="rtl:-scale-x-100" aria-hidden />
+          </MagneticLink>
+        </motion.div>
+
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.85, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col gap-4 rounded-[2rem] border border-line bg-sunken p-5 shadow-[0_32px_70px_-35px_rgb(var(--shadow)/0.4)] md:p-7"
+        >
+          {/* Card Header */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-brand text-on-brand">
+                <PiggyBank size={22} weight="duotone" aria-hidden />
+              </span>
+              <span className="text-lg font-black tracking-tight">{c.monthBadge}</span>
+              <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-bold text-brand-ink">
+                {c.latestBadge}
+              </span>
+            </div>
+            <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-brand-ink tabular-nums">
+              {locale === "fa"
+                ? `${formatNumber(savingsPct, locale)}٪ از ورودی ماه`
+                : `${savingsPct}% of incoming money`}
+            </span>
+          </div>
+
+          {/* Live Savings Summary Box */}
+          <div className="flex flex-col gap-3 rounded-2xl bg-surface p-4 md:p-5">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-muted">{c.canSaveLabel}</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-black tracking-tight text-brand-ink tabular-nums md:text-4xl">
+                  +{formatNumber(canSave, locale)}
+                </span>
+                <span className="text-sm font-semibold text-muted">{c.unit}</span>
+              </div>
+              {totalCutSavings > 0 && (
+                <p className="text-xs font-semibold text-brand-ink tabular-nums">
+                  {c.savedFromCutsLabel} +{formatNumber(totalCutSavings, locale)} {c.unit}
+                </p>
+              )}
+            </div>
+
+            <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-sunken" aria-hidden>
+              <div
+                className="h-full bg-ink/40 transition-all duration-300"
+                style={{ width: `${necessaryShare}%` }}
+              />
+              <div
+                className="h-full bg-brand transition-all duration-300"
+                style={{ width: `${cutShare}%` }}
+              />
+            </div>
+
+            <dl className="grid grid-cols-2 gap-2 pt-1">
+              <div className="flex flex-col gap-0.5 rounded-xl bg-sunken px-3 py-2">
+                <dt className="flex items-center gap-1 text-[11px] font-medium text-muted">
+                  <ArrowDownLeft size={13} weight="bold" className="text-brand" aria-hidden />
+                  {c.incomingLabel}
+                </dt>
+                <dd className="text-sm font-bold text-brand-ink tabular-nums">
+                  +{formatNumber(c.incomeAmount, locale)}{" "}
+                  <span className="text-[10px] font-medium text-muted">{c.unit}</span>
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 rounded-xl bg-sunken px-3 py-2">
+                <dt className="flex items-center gap-1 text-[11px] font-medium text-muted">
+                  <ArrowUpRight size={13} weight="bold" aria-hidden />
+                  {c.buysLabel}
+                </dt>
+                <dd className="text-sm font-bold tabular-nums">
+                  {formatNumber(totalBuys, locale)}{" "}
+                  <span className="text-[10px] font-medium text-muted">{c.unit}</span>
+                </dd>
+              </div>
+            </dl>
+
+            <dl className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-0.5 rounded-xl bg-sunken px-3 py-2">
+                <dt className="text-[11px] font-medium text-muted">{c.necessaryLabel}</dt>
+                <dd className="text-xs font-bold tabular-nums">
+                  {formatNumber(necessaryTotal, locale)}{" "}
+                  <span className="text-[10px] font-medium text-muted">{c.unit}</span>
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 rounded-xl bg-brand-soft px-3 py-2 text-brand-ink">
+                <dt className="flex items-center gap-1 text-[11px] font-medium opacity-85">
+                  <Prohibit size={12} weight="bold" aria-hidden />
+                  {c.unnecessaryLabel}
+                </dt>
+                <dd className="text-xs font-bold tabular-nums">
+                  {formatNumber(unnecessaryTotal, locale)}{" "}
+                  <span className="text-[10px] font-medium opacity-75">{c.unit}</span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Interactive Buys List */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold text-muted">{c.hint}</p>
+            <ul className="flex flex-col gap-1.5">
+              {visibleItems.map((item) => {
+                const isUnnecessary = !!unnecessaryMap[item.id];
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      aria-pressed={isUnnecessary}
+                      onClick={() => toggleItem(item.id)}
+                      className="flex w-full items-center gap-3 rounded-2xl bg-surface px-3.5 py-2.5 text-start transition-transform active:scale-[0.99]"
+                    >
+                      <span
+                        className={`inline-flex size-9 shrink-0 items-center justify-center rounded-xl ${
+                          isUnnecessary ? "bg-brand-soft text-brand-ink" : "bg-sunken text-ink"
+                        }`}
+                      >
+                        <CategoryIcon category={item.category} size={18} />
+                      </span>
+                      <span
+                        className={`min-w-0 flex-1 truncate text-sm font-semibold ${
+                          isUnnecessary ? "line-through opacity-55" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                      <span
+                        className={`shrink-0 text-sm font-bold tabular-nums ${
+                          isUnnecessary ? "line-through opacity-50" : ""
+                        }`}
+                      >
+                        {formatNumber(item.amount, locale)}{" "}
+                        <span className="text-[10px] font-medium text-muted">{c.unit}</span>
+                      </span>
+                      <span
+                        className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-bold transition-colors ${
+                          isUnnecessary ? "bg-brand text-on-brand" : "bg-sunken text-muted"
+                        }`}
+                      >
+                        <Prohibit size={12} weight={isUnnecessary ? "bold" : "regular"} aria-hidden />
+                        {isUnnecessary ? c.keepLabel : c.markLabel}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {hasMarkedVisible && (
+            <button
+              type="button"
+              onClick={deleteUnnecessaryItems}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-danger/12 px-5 text-xs font-bold text-danger transition-transform active:scale-[0.98]"
+            >
+              <Trash size={16} weight="bold" aria-hidden />
+              {c.deleteAction}
+            </button>
+          )}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 export function BankMarquee({ copy }: { copy: LandingCopy }) {
   const row = [...copy.banks, ...copy.banks];
