@@ -53,6 +53,7 @@ type StoreValue = {
   notify: (message: string, tone?: Toast["tone"]) => void;
   dismissToast: () => void;
   saveTransaction: (tx: Transaction) => boolean;
+  saveTransactionsBatch: (txs: Transaction[], message?: string) => boolean;
   deleteTransaction: (id: string) => void;
   deleteTransactions: (ids: string[], message?: string) => void;
   toggleUnnecessary: (ids: string[], unnecessary?: boolean) => void;
@@ -172,6 +173,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return commit(next);
     },
     [commit, transactions],
+  );
+
+  const saveTransactionsBatch = useCallback(
+    (txs: Transaction[], message?: string) => {
+      if (txs.length === 0) return false;
+      const byId = new Map(transactions.map((item) => [item.id, item]));
+      for (const tx of txs) {
+        byId.set(tx.id, tx);
+      }
+      const next = [...byId.values()];
+      if (commit(next)) {
+        notify(message ?? t.toast.saved);
+        return true;
+      }
+      return false;
+    },
+    [commit, notify, t, transactions],
   );
 
   const deleteTransaction = useCallback(
@@ -312,6 +330,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       notify,
       dismissToast: () => setToast(null),
       saveTransaction,
+      saveTransactionsBatch,
       deleteTransaction,
       deleteTransactions,
       toggleUnnecessary,
@@ -330,6 +349,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateSettings,
       notify,
       saveTransaction,
+      saveTransactionsBatch,
       deleteTransaction,
       deleteTransactions,
       toggleUnnecessary,

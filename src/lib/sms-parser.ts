@@ -50,7 +50,17 @@ const INCOME_WORDS = [
   "received",
   "refund",
 ];
-const BALANCE_WORDS = ["مانده", "موجودی", "balance", "avl"];
+const BALANCE_WORDS = [
+  "مانده",
+  "موجودی",
+  "قابل برداشت",
+  "دارایی",
+  "balance",
+  "avl",
+  "avail",
+  "inventory",
+  "bal",
+];
 const AMOUNT_WORDS = ["مبلغ", "amount", "amt"];
 const IGNORE_LINE = ["کارت", "card", "پیگیری", "مرجع", "tracking", "ref"];
 
@@ -317,16 +327,22 @@ export function parseBankSms(raw: string): ParsedSms | null {
   let balance: number | null = null;
   let best: { found: Found; score: number } | null = null;
   const amountKeywords = [...EXPENSE_WORDS, ...INCOME_WORDS, ...AMOUNT_WORDS];
+  let carryBalance = false;
 
   // Every number is judged by the words standing between it and the number before it. Plenty of banks
   // put the amount and the balance on one line, so a whole line can be neither one thing nor the other.
   for (const line of lines) {
     const nums = numbersIn(line).filter((n) => n.value > 0);
-    if (!nums.length) continue;
+    if (!nums.length) {
+      if (has(line, BALANCE_WORDS)) carryBalance = true;
+      else if (has(line, amountKeywords)) carryBalance = false;
+      continue;
+    }
 
     const ignored = has(line, IGNORE_LINE);
     let lineBalance: number | null = null;
-    let reportingBalance = false;
+    let reportingBalance = carryBalance;
+    carryBalance = false;
     let cursor = 0;
 
     for (const n of nums) {
@@ -335,7 +351,10 @@ export function parseBankSms(raw: string): ParsedSms | null {
       if (has(label, BALANCE_WORDS)) reportingBalance = true;
       else if (has(label, amountKeywords)) reportingBalance = false;
       if (ACCOUNT_BEFORE.test(label)) continue;
-      if (reportingBalance) {
+      if (
+        reportingBalance ||
+        (nums.length === 1 && !has(line, amountKeywords) && has(line.slice(n.end), BALANCE_WORDS))
+      ) {
         lineBalance = n.value;
         continue;
       }
@@ -351,6 +370,7 @@ export function parseBankSms(raw: string): ParsedSms | null {
         best = { found: n, score };
       }
     }
+    if (has(line.slice(cursor), BALANCE_WORDS)) carryBalance = true;
     balance ??= lineBalance;
   }
 
@@ -367,6 +387,29 @@ export function parseBankSms(raw: string): ParsedSms | null {
       .sort((a, b) => b.value - a.value)[0];
     if (spare) best = { found: spare, score: 0 };
   }
+
+  const inRial = /ریال|rial|irr/i.test(normalized) || !/تومان|toman|\$|usd|eur|€/i.test(normalized);
+  const detectedBank = detectBank(lines, normalized);
+
+  // A bank SMS that only reports the account balance/inventory (with no separate debit/credit amount).
+  if (!best && balance !== null) {
+    const defaultTitle =
+      detectedBank || (/[a-z]/i.test(normalized) ? "Account balance" : "موجودی حساب");
+    return {
+      kind: "income",
+      amount: 0,
+      inRial,
+      bank: detectedBank,
+      balance,
+      at,
+      dateStated: stated,
+      holder: detectHolder(normalized),
+      account: detectAccount(normalized),
+      suggestedTitle: defaultTitle,
+      category: "other",
+    };
+  }
+
   if (!best) return null;
 
   const body = lines.map(beforeBalance).join("\n");
@@ -384,8 +427,8 @@ export function parseBankSms(raw: string): ParsedSms | null {
   return {
     kind,
     amount: best.found.value,
-    inRial: /ریال|rial|irr/i.test(normalized) || !/تومان|toman|\$|usd|eur|€/i.test(normalized),
-    bank: detectBank(lines, normalized),
+    inRial,
+    bank: detectedBank,
     balance,
     at,
     dateStated: stated,
@@ -394,4 +437,82 @@ export function parseBankSms(raw: string): ParsedSms | null {
     suggestedTitle: suggestTitle(lines, kind === "income" ? INCOME_WORDS : EXPENSE_WORDS),
     category,
   };
+}
+
+function splitBlockByBalances(block: string): string[] {
+  const rawLines = block
+    .split(/\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (rawLines.length <= 1) return [block];
+
+  const segments: string[][] = [];
+  let current: string[] = [];
+  let waitingBalanceNum = false;
+  let balanceCount = 0;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const norm = normalize(line);
+    const nums = numbersIn(norm).filter((n) => n.value > 0);
+    const hasBalWord = has(norm, BALANCE_WORDS);
+    current.push(line);
+
+    const completedBalance = (hasBalWord && nums.length > 0) || (waitingBalanceNum && nums.length > 0);
+    waitingBalanceNum = hasBalWord && nums.length === 0;
+
+    if (completedBalance) {
+      balanceCount += 1;
+      const next = rawLines[i + 1];
+      if (next) {
+        const nextNorm = normalize(next);
+        const nextHasDateOrTime =
+          FULL_DATE.test(nextNorm) || SHORT_DATE_TIME.test(nextNorm) || TIME.test(nextNorm);
+        const nextHasMoneyOrBank =
+          has(nextNorm, MONEY_WORDS) || BANKS.some((b) => nextNorm.includes(b));
+        if (nextHasDateOrTime && !nextHasMoneyOrBank) {
+          current.push(next);
+          i += 1;
+        }
+      }
+      segments.push(current);
+      current = [];
+    }
+  }
+
+  if (current.length > 0) {
+    if (segments.length > 0) {
+      const trailingText = current.join("\n");
+      if (looksLikeBankSms(trailingText)) segments.push(current);
+      else segments[segments.length - 1].push(...current);
+    } else {
+      segments.push(current);
+    }
+  }
+
+  if (balanceCount < 2 || segments.length < 2) return [block];
+  return segments.map((s) => s.join("\n"));
+}
+
+/**
+ * Parses one or multiple bank SMS messages pasted together.
+ */
+export function parseBankSmsBatch(raw: string): { sms: string; parsed: ParsedSms }[] {
+  const blocks = raw
+    .split(/\n\s*\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  const chunks = blocks.flatMap(splitBlockByBalances);
+  const results: { sms: string; parsed: ParsedSms }[] = [];
+
+  for (const chunk of chunks) {
+    const parsed = parseBankSms(chunk);
+    if (parsed) results.push({ sms: chunk, parsed });
+  }
+
+  if (results.length > 0) return results;
+
+  const single = parseBankSms(raw);
+  return single ? [{ sms: raw.trim(), parsed: single }] : [];
 }

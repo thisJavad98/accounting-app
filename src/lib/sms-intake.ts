@@ -1,6 +1,6 @@
 import { dayKey, todayKey } from "./dates";
 import { newId } from "./format";
-import { parseBankSms } from "./sms-parser";
+import { parseBankSms, parseBankSmsBatch, type ParsedSms } from "./sms-parser";
 import type { Currency, Transaction } from "./types";
 
 const MINUTE = 60_000;
@@ -15,9 +15,9 @@ const MINUTE = 60_000;
  */
 export type Intake =
   | { status: "unreadable" }
-  | { status: "old"; tx: Transaction }
+  | { status: "old"; tx: Transaction; extra?: Transaction[] }
   | { status: "duplicate"; tx: Transaction }
-  | { status: "ready"; tx: Transaction };
+  | { status: "ready"; tx: Transaction; extra?: Transaction[] };
 
 /** Bank SMS never mention seconds, so times are kept to the minute and two reads of one SMS match. */
 const toMinute = (at: number) => Math.floor(at / MINUTE) * MINUTE;
@@ -37,23 +37,50 @@ function findSame(transactions: Transaction[], tx: Transaction) {
   );
 }
 
-export function intakeSms(raw: string, currency: Currency, transactions: Transaction[]): Intake {
-  const parsed = parseBankSms(raw);
-  if (!parsed) return { status: "unreadable" };
-
+function toTransaction(parsed: ParsedSms, currency: Currency, indexOffset = 0): Transaction {
   const toCurrency = (value: number) => (currency === "IRT" && parsed.inRial ? Math.round(value / 10) : value);
-  const tx: Transaction = {
+  return {
     id: newId(),
     kind: parsed.kind,
     amount: toCurrency(parsed.amount),
-    at: parsed.at ?? toMinute(Date.now()),
+    at: parsed.at ?? toMinute(Date.now()) + indexOffset,
     title: parsed.suggestedTitle || parsed.bank,
     note: "",
     category: parsed.category,
     bank: parsed.bank,
     balance: parsed.balance === null ? null : toCurrency(parsed.balance),
   };
+}
 
+export function intakeSms(raw: string, currency: Currency, transactions: Transaction[]): Intake {
+  const batch = parseBankSmsBatch(raw);
+  if (batch.length > 1) {
+    const fresh: { tx: Transaction; dateStated: boolean }[] = [];
+    let firstDupe: Transaction | null = null;
+    batch.forEach((item, idx) => {
+      const tx = toTransaction(item.parsed, currency, idx);
+      const same = findSame([...transactions, ...fresh.map((f) => f.tx)], tx);
+      if (same) {
+        firstDupe ??= same;
+      } else {
+        fresh.push({ tx, dateStated: item.parsed.dateStated });
+      }
+    });
+    if (fresh.length === 0) {
+      return firstDupe ? { status: "duplicate", tx: firstDupe } : { status: "unreadable" };
+    }
+    const [first, ...rest] = fresh;
+    const old = first.dateStated && dayKey(new Date(first.tx.at)) !== todayKey();
+    const extra = rest.length > 0 ? rest.map((r) => r.tx) : undefined;
+    return extra
+      ? { status: old ? "old" : "ready", tx: first.tx, extra }
+      : { status: old ? "old" : "ready", tx: first.tx };
+  }
+
+  const parsed = batch[0]?.parsed ?? parseBankSms(raw);
+  if (!parsed) return { status: "unreadable" };
+
+  const tx = toTransaction(parsed, currency);
   const same = findSame(transactions, tx);
   if (same) return { status: "duplicate", tx: same };
 

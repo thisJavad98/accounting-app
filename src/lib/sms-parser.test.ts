@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { dayKey, todayKey } from "./dates";
+import { computeBankInventories, detectSmsInventoryPreview } from "./inventory";
 import { intakeSms } from "./sms-intake";
-import { looksLikeBankSms, parseBankSms } from "./sms-parser";
+import { looksLikeBankSms, parseBankSms, parseBankSmsBatch } from "./sms-parser";
 
 const jalali = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
   year: "numeric",
@@ -121,3 +122,69 @@ test("rials are converted to tomans, balance included", () => {
   assert.equal(result.tx.amount, 125_000);
   assert.equal(result.tx.balance, 340_000);
 });
+
+test("detects balance-only inventory SMS and multi-line balance", () => {
+  const parsed = read("بانک سامان\nموجودی قابل برداشت:\n45,000,000 ریال");
+  assert.equal(parsed.bank, "بانک سامان");
+  assert.equal(parsed.balance, 45_000_000);
+  assert.equal(parsed.amount, 0);
+});
+
+test("deduplicates duplicate banks by keeping the last inventory and sums across distinct banks", () => {
+  const multiSms = [
+    "بانک ملت\nبرداشت: 1,000,000 ریال\nمانده: 20,000,000 ریال",
+    "بانک سامان\nواریز: 5,000,000 ریال\nموجودی: 35,000,000 ریال",
+    "بانک ملت\nبرداشت: 2,000,000 ریال\nمانده: 18,000,000 ریال",
+  ].join("\n\n");
+
+  const batch = parseBankSmsBatch(multiSms);
+  assert.equal(batch.length, 3);
+
+  const preview = detectSmsInventoryPreview(multiSms, "IRT");
+  // 2 distinct banks (Mellat & Saman), Mellat keeps its last inventory (1,800,000 IRT) + Saman (3,500,000 IRT)
+  assert.equal(preview.rawCount, 3);
+  assert.equal(preview.items.length, 2);
+  assert.equal(preview.totalInventory, 1_800_000 + 3_500_000);
+
+  const summary = computeBankInventories([
+    {
+      id: "1",
+      kind: "expense",
+      amount: 100_000,
+      at: 1_000,
+      title: "بانک ملت",
+      note: "",
+      category: "other",
+      bank: "بانک ملت",
+      balance: 2_000_000,
+    },
+    {
+      id: "2",
+      kind: "income",
+      amount: 500_000,
+      at: 2_000,
+      title: "بانک سامان",
+      note: "",
+      category: "salary",
+      bank: "سامان",
+      balance: 3_500_000,
+    },
+    {
+      id: "3",
+      kind: "expense",
+      amount: 200_000,
+      at: 3_000,
+      title: "ملت",
+      note: "",
+      category: "other",
+      bank: "ملت",
+      balance: 1_800_000,
+    },
+  ]);
+
+  assert.equal(summary.count, 2);
+  assert.equal(summary.items[0].balance, 1_800_000);
+  assert.equal(summary.items[1].balance, 3_500_000);
+  assert.equal(summary.total, 5_300_000);
+});
+

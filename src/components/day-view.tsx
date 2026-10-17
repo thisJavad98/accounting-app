@@ -16,6 +16,7 @@ import {
   todayKey,
 } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
+import { BankInventoryCard } from "./bank-inventory-card";
 import { Money } from "./money";
 import { useStore } from "./store";
 import { TransactionRow } from "./transaction-row";
@@ -258,6 +259,8 @@ export function DayView() {
                 </span>
               </button>
             )}
+
+            <BankInventoryCard />
 
             {dayTxs.length > 0 ? (
               <ul className="-mt-2 flex flex-col">
