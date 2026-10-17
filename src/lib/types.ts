@@ -27,6 +27,8 @@ export type Transaction = {
   bank: string;
   /** Account balance reported by the bank SMS, if any. */
   balance: number | null;
+  /** Marked by the user in the month-end report as an unnecessary buy to cut/save. */
+  unnecessary?: boolean;
 };
 
 export type Theme = "system" | "light" | "dark";

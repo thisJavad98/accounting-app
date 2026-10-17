@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDots, ChartDonut, GearSix, Plus, type Icon } from "@phosphor-icons/react";
+import { CalendarDots, ChartDonut, GearSix, PiggyBank, Plus, type Icon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStore } from "./store";
@@ -9,9 +9,10 @@ export function BottomNav() {
   const { t, openSheet } = useStore();
   const pathname = usePathname();
 
-  const items: { href: "/app" | "/app/month" | "/app/settings"; label: string; icon: Icon }[] = [
+  const items: { href: "/app" | "/app/month" | "/app/reports" | "/app/settings"; label: string; icon: Icon }[] = [
     { href: "/app", label: t.nav.day, icon: CalendarDots },
     { href: "/app/month", label: t.nav.month, icon: ChartDonut },
+    { href: "/app/reports", label: t.nav.reports, icon: PiggyBank },
     { href: "/app/settings", label: t.nav.settings, icon: GearSix },
   ];
 
@@ -31,7 +32,7 @@ export function BottomNav() {
         aria-label={t.appName}
         className="pointer-events-auto border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
       >
-        <ul className="grid grid-cols-3">
+        <ul className="grid grid-cols-4">
           {items.map(({ href, label, icon: Glyph }) => {
             const active = pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
             return (

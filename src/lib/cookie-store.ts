@@ -20,7 +20,18 @@ const MAX_AGE = 60 * 60 * 24 * 400;
 
 export const STORAGE_CAPACITY = CHUNK_SIZE * MAX_CHUNKS;
 
-type TxTuple = [string, 0 | 1, number, number, string, string, string, string, number | null];
+type TxTuple = [
+  string,
+  0 | 1,
+  number,
+  number,
+  string,
+  string,
+  string,
+  string,
+  number | null,
+  (0 | 1)?,
+];
 
 function readCookies(): Map<string, string> {
   const map = new Map<string, string>();
@@ -55,7 +66,7 @@ function decode(payload: string): string {
 }
 
 function toTuple(tx: Transaction): TxTuple {
-  return [
+  const tuple: TxTuple = [
     tx.id,
     tx.kind === "income" ? 1 : 0,
     tx.amount,
@@ -66,15 +77,17 @@ function toTuple(tx: Transaction): TxTuple {
     tx.bank,
     tx.balance,
   ];
+  if (tx.unnecessary) tuple.push(1);
+  return tuple;
 }
 
 function fromTuple(raw: unknown): Transaction | null {
   if (!Array.isArray(raw) || raw.length < 8) return null;
-  const [id, kind, amount, at, title, note, category, bank, balance] = raw;
+  const [id, kind, amount, at, title, note, category, bank, balance, unnecessary] = raw;
   if (typeof id !== "string" || typeof amount !== "number" || typeof at !== "number") {
     return null;
   }
-  return {
+  const tx: Transaction = {
     id,
     kind: kind === 1 ? "income" : "expense",
     amount,
@@ -87,6 +100,8 @@ function fromTuple(raw: unknown): Transaction | null {
     bank: String(bank ?? ""),
     balance: typeof balance === "number" ? balance : null,
   };
+  if (unnecessary === 1 || unnecessary === true) tx.unnecessary = true;
+  return tx;
 }
 
 function serializeTransactions(txs: Transaction[]): string {
@@ -124,6 +139,7 @@ function looseTuple(obj: Record<string, unknown>): unknown[] {
     obj.category,
     obj.bank,
     obj.balance,
+    obj.unnecessary ? 1 : 0,
   ];
 }
 

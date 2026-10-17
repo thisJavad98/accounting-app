@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, Trash } from "@phosphor-icons/react";
+import { ArrowDownLeft, ArrowUpRight, Prohibit, Trash } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
 import { CATEGORY_IDS } from "@/lib/categories";
 import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
@@ -73,7 +73,17 @@ export function SmsDetails({
   );
 }
 
-export function TransactionSheet({ id, sms }: { id: string | null; sms?: string }) {
+export function TransactionSheet({
+  id,
+  sms,
+  defaultKind = "expense",
+  defaultCategory = "other",
+}: {
+  id: string | null;
+  sms?: string;
+  defaultKind?: TxKind;
+  defaultCategory?: CategoryId;
+}) {
   const { t, settings, transactions, selectedDay, closeSheet, saveTransaction, deleteTransaction, notify } =
     useStore();
   const existing = useMemo(
@@ -81,14 +91,15 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
     [id, transactions],
   );
 
-  const [kind, setKind] = useState<TxKind>(existing?.kind ?? "expense");
+  const [kind, setKind] = useState<TxKind>(existing?.kind ?? defaultKind);
   const [amountText, setAmountText] = useState(() =>
     existing ? formatAmountInput(String(existing.amount), settings.locale) : "",
   );
   const parsed = useMemo(() => (sms ? parseBankSms(sms) : null), [sms]);
   const [title, setTitle] = useState(existing?.title || parsed?.suggestedTitle || "");
   const [note, setNote] = useState(existing?.note ?? "");
-  const [category, setCategory] = useState<CategoryId>(existing?.category ?? "other");
+  const [category, setCategory] = useState<CategoryId>(existing?.category ?? defaultCategory);
+  const [unnecessary, setUnnecessary] = useState<boolean>(!!existing?.unnecessary);
   const [errors, setErrors] = useState<{ amount?: boolean; title?: boolean }>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const ids = useId();
@@ -126,6 +137,7 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
       category,
       bank: existing?.bank ?? "",
       balance: existing?.balance ?? null,
+      unnecessary: kind === "expense" && unnecessary ? true : undefined,
     };
     if (saveTransaction(tx)) {
       notify(t.toast.saved);
@@ -273,6 +285,30 @@ export function TransactionSheet({ id, sms }: { id: string | null; sms?: string 
             ))}
           </div>
         </fieldset>
+
+        {kind === "expense" && (
+          <button
+            type="button"
+            aria-pressed={unnecessary}
+            onClick={() => setUnnecessary((v) => !v)}
+            className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-start text-sm font-semibold transition-colors ${
+              unnecessary ? "bg-brand-soft text-brand-ink" : "bg-sunken text-ink"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <Prohibit size={18} weight={unnecessary ? "fill" : "regular"} aria-hidden />
+              {t.form.unnecessary}
+            </span>
+            <span
+              aria-hidden
+              className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                unnecessary ? "border-brand bg-brand text-on-brand" : "border-faint"
+              }`}
+            >
+              {unnecessary && <span className="size-2 rounded-full bg-on-brand" />}
+            </span>
+          </button>
+        )}
 
         <div className="flex flex-col gap-2 pt-1">
           <button type="submit" className={primaryButton}>

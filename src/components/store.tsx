@@ -21,14 +21,14 @@ import {
 import { dayKey, todayKey, type DayKey } from "@/lib/dates";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
 import { intakeSms, needsClipboardHandover, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
-import type { Currency, Locale, Settings, Theme, Transaction } from "@/lib/types";
+import type { CategoryId, Currency, Locale, Settings, Theme, Transaction, TxKind } from "@/lib/types";
 
 export type Sheet =
   | { type: "add" }
   | { type: "sms"; text?: string }
   | { type: "paste" }
   | { type: "calendar" }
-  | { type: "tx"; id: string | null; sms?: string }
+  | { type: "tx"; id: string | null; sms?: string; kind?: TxKind; category?: CategoryId }
   | { type: "confirm"; tx: Transaction; sms: string; old?: boolean }
   | null;
 
@@ -54,6 +54,8 @@ type StoreValue = {
   dismissToast: () => void;
   saveTransaction: (tx: Transaction) => boolean;
   deleteTransaction: (id: string) => void;
+  deleteTransactions: (ids: string[], message?: string) => void;
+  toggleUnnecessary: (ids: string[], unnecessary?: boolean) => void;
   replaceAll: (txs: Transaction[]) => boolean;
   /** Shows a parsed bank SMS for confirmation; nothing is saved until `confirmSms`. */
   receiveSms: (raw: string) => boolean;
@@ -179,6 +181,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [commit, notify, t, transactions],
   );
 
+  const deleteTransactions = useCallback(
+    (ids: string[], message?: string) => {
+      const idSet = new Set(ids);
+      const next = transactions.filter((item) => !idSet.has(item.id));
+      if (next.length === 0) {
+        clearTransactions();
+        setTransactions([]);
+        notify(message ?? t.toast.deleted);
+        return;
+      }
+      if (commit(next)) notify(message ?? t.toast.deleted);
+    },
+    [commit, notify, t, transactions],
+  );
+
+  const toggleUnnecessary = useCallback(
+    (ids: string[], unnecessary?: boolean) => {
+      const idSet = new Set(ids);
+      const next = transactions.map((item) => {
+        if (!idSet.has(item.id)) return item;
+        const nextVal = unnecessary ?? !item.unnecessary;
+        return { ...item, unnecessary: nextVal || undefined };
+      });
+      commit(next);
+    },
+    [commit, transactions],
+  );
+
   const replaceAll = useCallback(
     (txs: Transaction[]) => {
       if (txs.length === 0) {
@@ -283,6 +313,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       dismissToast: () => setToast(null),
       saveTransaction,
       deleteTransaction,
+      deleteTransactions,
+      toggleUnnecessary,
       replaceAll,
       receiveSms,
       confirmSms,
@@ -299,6 +331,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       notify,
       saveTransaction,
       deleteTransaction,
+      deleteTransactions,
+      toggleUnnecessary,
       replaceAll,
       receiveSms,
       confirmSms,

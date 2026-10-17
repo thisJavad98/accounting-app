@@ -21,7 +21,13 @@ export function Sheets() {
         <ConfirmSmsSheet key={`confirm-${sheet.tx.id}`} tx={sheet.tx} sms={sheet.sms} old={sheet.old} />
       )}
       {sheet?.type === "tx" && (
-        <TransactionSheet key={`tx-${sheet.id ?? "new"}`} id={sheet.id} sms={sheet.sms} />
+        <TransactionSheet
+          key={`tx-${sheet.id ?? "new"}-${sheet.kind ?? ""}`}
+          id={sheet.id}
+          sms={sheet.sms}
+          defaultKind={sheet.kind}
+          defaultCategory={sheet.category}
+        />
       )}
     </AnimatePresence>
   );

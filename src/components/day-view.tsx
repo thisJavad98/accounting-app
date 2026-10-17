@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarBlank, CaretDown, CaretLeft, CaretRight, ChatText, NotePencil, Tray } from "@phosphor-icons/react";
+import { CalendarBlank, CaretDown, CaretLeft, CaretRight, ChatText, NotePencil, PiggyBank, Tray } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "motion/react";
 import { useMemo, useState } from "react";
 import {
@@ -9,7 +9,10 @@ import {
   formatDayLong,
   formatDayNumber,
   formatMonth,
+  formatMonthName,
   formatWeekdayShort,
+  monthDays,
+  shiftMonth,
   todayKey,
 } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
@@ -61,6 +64,28 @@ export function DayView() {
     () => transactions.filter((tx) => !tx.title).sort((a, b) => b.at - a.at),
     [transactions],
   );
+
+  const monthReviewTarget = useMemo(() => {
+    const currentDays = monthDays(today, locale);
+    const todayIndex = currentDays.indexOf(today);
+    const isNearEndOfMonth = todayIndex >= currentDays.length - 3;
+    const currentSet = new Set(currentDays);
+    const currentHasExpenses = transactions.some(
+      (tx) => tx.kind === "expense" && currentSet.has(dayKey(new Date(tx.at))),
+    );
+    if (isNearEndOfMonth && currentHasExpenses) {
+      return { day: today, text: t.day.monthEndPrompt };
+    }
+    const prevStart = shiftMonth(today, locale, -1);
+    const prevSet = new Set(monthDays(prevStart, locale));
+    const prevHasExpenses = transactions.some(
+      (tx) => tx.kind === "expense" && prevSet.has(dayKey(new Date(tx.at))),
+    );
+    if (prevHasExpenses) {
+      return { day: prevStart, text: t.day.monthReviewPrompt(formatMonthName(prevStart, locale)) };
+    }
+    return null;
+  }, [today, locale, transactions, t.day]);
 
   const spent = dayTxs.filter((tx) => tx.kind === "expense").reduce((s, tx) => s + tx.amount, 0);
   const received = dayTxs.filter((tx) => tx.kind === "income").reduce((s, tx) => s + tx.amount, 0);
@@ -209,6 +234,27 @@ export function DayView() {
                 </span>
                 <span className="rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-on-brand">
                   {t.day.needsTitleAction}
+                </span>
+              </button>
+            )}
+
+            {monthReviewTarget && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDay(monthReviewTarget.day);
+                  push(`/app/reports/${monthDays(monthReviewTarget.day, locale)[0]}`);
+                }}
+                className="flex items-center gap-3 rounded-2xl bg-sunken px-4 py-3.5 text-start transition-transform active:scale-[0.98]"
+              >
+                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+                  <PiggyBank size={22} weight="duotone" aria-hidden />
+                </span>
+                <span className="flex-1 text-sm font-semibold leading-snug">
+                  {monthReviewTarget.text}
+                </span>
+                <span className="shrink-0 rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-on-brand">
+                  {t.day.monthReviewAction}
                 </span>
               </button>
             )}
