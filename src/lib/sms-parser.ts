@@ -62,7 +62,16 @@ const BALANCE_WORDS = [
   "bal",
 ];
 const AMOUNT_WORDS = ["مبلغ", "amount", "amt"];
-const IGNORE_LINE = ["کارت", "card", "پیگیری", "مرجع", "tracking", "ref"];
+const IGNORE_LINE = [
+  "کارت",
+  "card",
+  "پیگیری",
+  "مرجع",
+  "پایانه",
+  "terminal",
+  "tracking",
+  "ref",
+];
 
 const BANKS = [
   "ملت",
@@ -91,15 +100,37 @@ const BANKS = [
 ];
 
 const CATEGORY_HINTS: [CategoryId, RegExp][] = [
-  ["bills", /قبض|شارژ|اینترنت|bill|topup|top-up/i],
+  // "خرید اینترنتی" is online shopping, not an internet bill — keep قبض/شارژ explicit.
+  ["bills", /قبض|شارژ\s*(اینترنت|موبایل)?|قبض\s*اینترنت|bill|topup|top-up/i],
   ["transport", /اسنپ|تپسی|تاکسی|مترو|بنزین|snapp|tapsi|uber|taxi|fuel/i],
   ["food", /رستوران|کافه|فست ?فود|restaurant|cafe|coffee|starbucks/i],
   ["grocery", /سوپرمارکت|هایپر|افق کوروش|grocery|market/i],
   ["health", /داروخانه|پزشک|بیمارستان|pharmacy|clinic|doctor/i],
   ["salary", /حقوق|salary|payroll/i],
-  ["transfer", /انتقال|کارت به کارت|پایا|ساتنا|transfer/i],
-  ["shopping", /خرید|فروشگاه|\bpos\b|purchase|\bshop/i],
+  // «پایانه» (POS terminal) must not match the پایا transfer rail.
+  ["transfer", /انتقال|کارت به کارت|پایا(?!نه)|ساتنا|\btransfer\b/i],
+  ["shopping", /خرید\s*اینترنتی|خرید|فروشگاه|\bpos\b|purchase|\bshop/i],
 ];
+
+const JALALI_MONTHS: Record<string, number> = {
+  فروردین: 1,
+  اردیبهشت: 2,
+  خرداد: 3,
+  تیر: 4,
+  مرداد: 5,
+  شهریور: 6,
+  مهر: 7,
+  آبان: 8,
+  آذر: 9,
+  دی: 10,
+  بهمن: 11,
+  اسفند: 12,
+};
+
+/** e.g. «۳ آبان ۱۴۰۵» or «3 Aban 1405» as payment gateways write it. */
+const PERSIAN_NAMED_DATE = new RegExp(
+  String.raw`(?<!\d)(\d{1,2})\s+(${Object.keys(JALALI_MONTHS).join("|")})\s+(\d{2,4})(?!\d)`,
+);
 
 // The lookarounds stop the hyphens of a card number (6104-3378-…) from being taken for minus signs.
 // Dots group thousands only from two groups up (1.250.000), where they cannot be a decimal point.
@@ -117,7 +148,7 @@ function normalize(text: string): string {
   return toLatinDigits(text)
     .replace(/ي/g, "ی")
     .replace(/ك/g, "ک")
-    .replace(/\u200c/g, " ")
+    .replace(/[\u200c\u200e\u200f\ufeff]/g, " ")
     .replace(/\r/g, "");
 }
 
@@ -225,9 +256,19 @@ function extractDate(text: string): ExtractedDate {
   let date: [number, number, number] | null = null;
   let time: [number, number] | null = null;
 
+  const named = rest.match(PERSIAN_NAMED_DATE);
+  if (named) {
+    const day = Number(named[1]);
+    const month = JALALI_MONTHS[named[2]];
+    let year = Number(named[3]);
+    if (year < 100) year += 1400;
+    if (month && day >= 1 && day <= 31) date = jalaliToGregorian(year, month, day);
+    rest = rest.replace(named[0], " ");
+  }
+
   const full = rest.match(FULL_DATE);
   if (full) {
-    date = toGregorian(Number(full[1]), Number(full[2]), Number(full[3]));
+    date ??= toGregorian(Number(full[1]), Number(full[2]), Number(full[3]));
     rest = rest.replace(full[0], " ");
   }
 
@@ -286,7 +327,9 @@ function detectHolder(text: string): string {
 }
 
 function detectAccount(text: string): string {
-  const match = text.match(/(?:حساب|کارت|account|acct|card|a\/c)\s*(?:شماره|no\.?|number)?\s*[:：]?\s*([\d*.\-x]{4,})/i);
+  const match = text.match(
+    /(?:پرداخت از کارت|شماره\s*کارت|حساب|کارت|account|acct|card|a\/c)\s*(?:شماره|no\.?|number)?\s*[:：]?\s*([\d\s*.\-x]{4,})/i,
+  );
   if (!match) return "";
   const digits = match[1].replace(/\D/g, "");
   return digits.slice(-4);
@@ -295,6 +338,7 @@ function detectAccount(text: string): string {
 /** Who the money went to or came from, as the SMS words it, so the saved row is not left untitled. */
 const MERCHANT = [
   /(?:خرید از|پرداخت به|واریز از|انتقال به|انتقال از|بابت|از طرف)\s+([^\n\d:،,.]{2,30})/,
+  /(?:شرکت پرداخت|پذیرنده|فروشگاه)\s*[:：]?\s*([^\n]{2,40})/,
   /\bat\s+([A-Z][\w&' ]{1,28}?)(?=[.,]|\s+on\b|\s+for\b|$)/,
 ];
 /** Words that follow a name but belong to the next clause, and words that are never a name at all. */

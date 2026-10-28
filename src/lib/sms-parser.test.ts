@@ -188,3 +188,26 @@ test("deduplicates duplicate banks by keeping the last inventory and sums across
   assert.equal(summary.total, 5_300_000);
 });
 
+test("reads an online payment receipt with a Persian month name", () => {
+  const parsed = read(`خرید اینترنتی
+مبلغ :۶٬۹۰۰٬۰۰۰ ریال
+زمان : یکشنبه، ۳ آبان ۱۴۰۵ ۱۴:۳۹
+شرکت پرداخت : پرداخت الکترونیک سامان
+شماره پایانه : ۱۳۸۵۷۶۷۵
+پرداخت از کارت : ‎۶۲۱۹  ۸۶۱۹  ۲۸۸۶  ۰۹۹۷
+شماره پیگیری : ۰۳۷۵۵۸
+شماره مرجع : ۲۲۵۲۲۴۸۴۰۸۷۳`);
+
+  assert.equal(parsed.kind, "expense");
+  assert.equal(parsed.amount, 6_900_000);
+  assert.equal(parsed.inRial, true);
+  assert.equal(parsed.dateStated, true);
+  assert.equal(dayKey(new Date(parsed.at ?? 0)), "2026-10-25");
+  assert.equal(new Date(parsed.at ?? 0).getHours(), 14);
+  assert.equal(new Date(parsed.at ?? 0).getMinutes(), 39);
+  assert.equal(parsed.account, "0997");
+  assert.equal(parsed.suggestedTitle, "پرداخت الکترونیک سامان");
+  assert.equal(parsed.category, "shopping");
+  assert.match(parsed.bank, /سامان/);
+});
+
