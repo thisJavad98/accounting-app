@@ -1,15 +1,15 @@
 "use client";
 
 import { ArrowDownLeft, ArrowUpRight, Prohibit, Trash } from "@phosphor-icons/react";
+import { usePathname, useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
-import { CATEGORY_IDS } from "@/lib/categories";
 import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
 import { formatAmountInput, formatNumber, newId, parseAmount } from "@/lib/format";
 import { parseBankSms, type ParsedSms } from "@/lib/sms-parser";
 import type { CategoryId, Transaction, TxKind } from "@/lib/types";
-import { CategoryIcon } from "./category-icon";
+import { CategoryPicker } from "./category-picker";
 import { Sheet } from "./sheet";
-import { useStore } from "./store";
+import { useStore, type TxSheetDraft } from "./store";
 import { chipClass, dangerButton, ghostButton, inputClass, primaryButton } from "./ui";
 
 function defaultTimestamp(day: string) {
@@ -78,28 +78,63 @@ export function TransactionSheet({
   sms,
   defaultKind = "expense",
   defaultCategory = "other",
+  draft,
 }: {
   id: string | null;
   sms?: string;
   defaultKind?: TxKind;
   defaultCategory?: CategoryId;
+  draft?: TxSheetDraft;
 }) {
-  const { t, settings, transactions, selectedDay, closeSheet, saveTransaction, deleteTransaction, notify } =
-    useStore();
+  const {
+    t,
+    settings,
+    transactions,
+    selectedDay,
+    closeSheet,
+    saveTransaction,
+    deleteTransaction,
+    notify,
+    beginCategoryReturn,
+  } = useStore();
+  const router = useRouter();
+  const pathname = usePathname();
   const existing = useMemo(
     () => (id ? transactions.find((tx) => tx.id === id) ?? null : null),
     [id, transactions],
   );
 
-  const [kind, setKind] = useState<TxKind>(existing?.kind ?? defaultKind);
-  const [amountText, setAmountText] = useState(() =>
-    existing ? formatAmountInput(String(existing.amount), settings.locale) : "",
-  );
+  const [kind, setKind] = useState<TxKind>(draft?.kind ?? existing?.kind ?? defaultKind);
+  const [amountText, setAmountText] = useState(() => {
+    if (draft) return draft.amountText;
+    return existing ? formatAmountInput(String(existing.amount), settings.locale) : "";
+  });
   const parsed = useMemo(() => (sms ? parseBankSms(sms) : null), [sms]);
-  const [title, setTitle] = useState(existing?.title || parsed?.suggestedTitle || "");
-  const [note, setNote] = useState(existing?.note ?? "");
-  const [category, setCategory] = useState<CategoryId>(existing?.category ?? defaultCategory);
-  const [unnecessary, setUnnecessary] = useState<boolean>(!!existing?.unnecessary);
+  const [title, setTitle] = useState(
+    draft?.title ?? (existing?.title || parsed?.suggestedTitle || ""),
+  );
+  const [note, setNote] = useState(draft?.note ?? existing?.note ?? "");
+  const [category, setCategory] = useState<CategoryId>(
+    draft ? defaultCategory : (existing?.category ?? defaultCategory),
+  );
+  const [unnecessary, setUnnecessary] = useState<boolean>(
+    draft?.unnecessary ?? !!existing?.unnecessary,
+  );
+
+  function openCreateCategory() {
+    beginCategoryReturn({
+      returnPath: pathname || "/app",
+      sheet: {
+        type: "tx",
+        id,
+        sms,
+        kind,
+        category,
+        draft: { kind, amountText, title, note, unnecessary },
+      },
+    });
+    router.push("/app/settings/categories?new=1");
+  }
   const [errors, setErrors] = useState<{ amount?: boolean; title?: boolean }>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const ids = useId();
@@ -268,23 +303,7 @@ export function TransactionSheet({
           </p>
         </div>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-3 text-sm font-semibold">{t.form.category}</legend>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_IDS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={category === value}
-                onClick={() => setCategory(value)}
-                className={chipClass(category === value)}
-              >
-                <CategoryIcon category={value} size={18} />
-                {t.categories[value]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <CategoryPicker value={category} onChange={setCategory} onCreateNew={openCreateCategory} />
 
         {kind === "expense" && (
           <button

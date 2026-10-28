@@ -2,7 +2,7 @@ export type Locale = "fa" | "en";
 export type Currency = "IRT" | "IRR" | "USD" | "EUR";
 export type TxKind = "expense" | "income";
 
-export type CategoryId =
+export type BuiltinCategoryId =
   | "food"
   | "grocery"
   | "transport"
@@ -14,6 +14,14 @@ export type CategoryId =
   | "transfer"
   | "salary"
   | "other";
+
+/** Built-in id, or a user-created id like `c_…`. */
+export type CategoryId = BuiltinCategoryId | (string & {});
+
+export type CustomCategory = {
+  id: CategoryId;
+  name: string;
+};
 
 export type Transaction = {
   id: string;
@@ -37,4 +45,8 @@ export type Settings = {
   locale: Locale;
   currency: Currency;
   theme: Theme;
+  /** Categories the user keeps featured first in pickers. */
+  favoriteCategories: CategoryId[];
+  /** User-created categories, stored with their display names. */
+  customCategories: CustomCategory[];
 };

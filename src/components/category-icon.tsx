@@ -11,12 +11,14 @@ import {
   Receipt,
   ShoppingBag,
   ShoppingCart,
+  Tag,
   Wallet,
   type Icon,
 } from "@phosphor-icons/react";
-import type { CategoryId } from "@/lib/types";
+import { isBuiltinCategory } from "@/lib/categories";
+import type { BuiltinCategoryId, CategoryId } from "@/lib/types";
 
-const ICONS: Record<CategoryId, Icon> = {
+const ICONS: Record<BuiltinCategoryId, Icon> = {
   food: ForkKnife,
   grocery: ShoppingCart,
   transport: Bus,
@@ -39,6 +41,6 @@ export function CategoryIcon({
   size?: number;
   className?: string;
 }) {
-  const Glyph = ICONS[category];
+  const Glyph = isBuiltinCategory(category) ? ICONS[category] : Tag;
   return <Glyph size={size} weight="duotone" className={className} aria-hidden />;
 }

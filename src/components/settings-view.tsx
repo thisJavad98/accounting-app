@@ -8,6 +8,7 @@ import {
   DownloadSimple,
   FileCsv,
   Moon,
+  SquaresFour,
   Sun,
   Trash,
   UploadSimple,
@@ -16,10 +17,11 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { categoryLabel } from "@/lib/categories";
 import { exportJson, parseBackup, STORAGE_CAPACITY, storageUsed } from "@/lib/cookie-store";
 import { dayKey, fromDayKey, todayKey } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
-import type { Currency, Locale, Theme, Transaction } from "@/lib/types";
+import type { CustomCategory, Currency, Locale, Theme, Transaction } from "@/lib/types";
 import type { Dictionary } from "@/lib/i18n";
 import { LogoMark } from "./logo";
 import { installPrompt } from "./service-worker";
@@ -34,7 +36,13 @@ const THEMES: { value: Theme; icon: Icon }[] = [
   { value: "dark", icon: Moon },
 ];
 
-function toCsv(txs: Transaction[], t: Dictionary, locale: Locale, currency: Currency) {
+function toCsv(
+  txs: Transaction[],
+  t: Dictionary,
+  locale: Locale,
+  currency: Currency,
+  customs: CustomCategory[],
+) {
   const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian-nu-latn" : "en-CA", {
     year: "numeric",
     month: "2-digit",
@@ -52,7 +60,7 @@ function toCsv(txs: Transaction[], t: Dictionary, locale: Locale, currency: Curr
         t.currencies[currency],
         tx.title,
         tx.note,
-        t.categories[tx.category],
+        categoryLabel(tx.category, t.categories, customs),
         tx.bank,
         tx.balance ?? "",
       ]
@@ -133,7 +141,7 @@ export function SettingsView() {
   function downloadCsv() {
     download(
       `dakhl-${todayKey()}.csv`,
-      toCsv(transactions, t, locale, settings.currency),
+      toCsv(transactions, t, locale, settings.currency, settings.customCategories),
       "text/csv;charset=utf-8",
     );
   }
@@ -208,6 +216,22 @@ export function SettingsView() {
           ))}
         </div>
         <p className="text-sm leading-relaxed text-muted">{t.settings.currencyHelper}</p>
+      </Section>
+
+      <Section title={t.settings.categoriesTitle}>
+        <Link
+          href="/app/settings/categories"
+          className="flex items-center gap-3 rounded-2xl bg-sunken p-3 active:scale-[0.99]"
+        >
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+            <SquaresFour size={22} weight="duotone" aria-hidden />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="font-bold">{t.settings.categoriesLink}</span>
+            <span className="text-xs text-muted">{t.settings.categoriesLinkHint}</span>
+          </span>
+          <CaretRight size={18} weight="bold" className="shrink-0 text-faint rtl:rotate-180" aria-hidden />
+        </Link>
       </Section>
 
       <Section title={t.settings.smsTitle}>

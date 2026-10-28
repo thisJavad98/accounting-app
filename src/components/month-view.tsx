@@ -15,6 +15,7 @@ import {
   shiftMonth,
   todayKey,
 } from "@/lib/dates";
+import { categoryLabel } from "@/lib/categories";
 import { formatNumber } from "@/lib/format";
 import type { CategoryId, Transaction } from "@/lib/types";
 import { CategoryIcon } from "./category-icon";
@@ -395,7 +396,9 @@ export function MonthView() {
                       </span>
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate text-sm font-semibold">{t.categories[category]}</span>
+                          <span className="truncate text-sm font-semibold">
+                            {categoryLabel(category, t.categories, settings.customCategories)}
+                          </span>
                           <Money value={total} className="text-sm font-bold" unitClassName="text-[10px] text-muted" />
                         </div>
                         <div className="flex items-center gap-2">

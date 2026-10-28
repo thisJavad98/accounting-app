@@ -1,6 +1,13 @@
 import { deflateSync, inflateSync } from "fflate";
 import type { CategoryId, Currency, Locale, Settings, Theme, Transaction } from "./types";
-import { CATEGORY_IDS } from "./categories";
+import {
+  isBuiltinCategory,
+  isCustomCategoryId,
+  parseCustomCategories,
+  parseFavoriteCategories,
+  serializeCustomCategories,
+  serializeFavoriteCategories,
+} from "./categories";
 
 /**
  * Browsers cap a single cookie at ~4KB, so transactions are serialized as
@@ -16,6 +23,8 @@ const TX_COUNT = "dk_tn";
 const LANG = "dk_lang";
 const CURRENCY = "dk_cur";
 const THEME = "dk_theme";
+const FAVORITES = "dk_fav";
+const CUSTOMS = "dk_cat";
 const MAX_AGE = 60 * 60 * 24 * 400;
 
 export const STORAGE_CAPACITY = CHUNK_SIZE * MAX_CHUNKS;
@@ -94,9 +103,10 @@ function fromTuple(raw: unknown): Transaction | null {
     at: at * 1000,
     title: String(title ?? ""),
     note: String(note ?? ""),
-    category: CATEGORY_IDS.includes(category as CategoryId)
-      ? (category as CategoryId)
-      : "other",
+    category:
+      typeof category === "string" && (isBuiltinCategory(category) || isCustomCategoryId(category))
+        ? category
+        : "other",
     bank: String(bank ?? ""),
     balance: typeof balance === "number" ? balance : null,
   };
@@ -187,12 +197,17 @@ export function loadSettings(): Settings {
   const locale = cookies.get(LANG);
   const currency = cookies.get(CURRENCY);
   const theme = cookies.get(THEME);
+  const customCategories = parseCustomCategories(cookies.get(CUSTOMS));
   return {
     locale: locale === "en" ? "en" : "fa",
     currency: (["IRT", "IRR", "USD", "EUR"] as const).includes(currency as Currency)
       ? (currency as Currency)
       : "IRT",
     theme: theme === "light" || theme === "dark" ? (theme satisfies Theme) : "system",
+    customCategories,
+    favoriteCategories: cookies.has(FAVORITES)
+      ? parseFavoriteCategories(cookies.get(FAVORITES) ?? "", customCategories)
+      : parseFavoriteCategories(null, customCategories),
   };
 }
 
@@ -200,6 +215,11 @@ export function saveSettings(settings: Settings) {
   writeCookie(LANG, settings.locale satisfies Locale);
   writeCookie(CURRENCY, settings.currency);
   writeCookie(THEME, settings.theme);
+  writeCookie(CUSTOMS, serializeCustomCategories(settings.customCategories));
+  writeCookie(
+    FAVORITES,
+    serializeFavoriteCategories(settings.favoriteCategories, settings.customCategories),
+  );
 }
 
 export function clearTransactions() {

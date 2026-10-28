@@ -21,16 +21,51 @@ import {
 import { dayKey, todayKey, type DayKey } from "@/lib/dates";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
 import { intakeSms, needsClipboardHandover, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
-import type { CategoryId, Currency, Locale, Settings, Theme, Transaction, TxKind } from "@/lib/types";
+import {
+  isCustomCategoryId,
+  newCustomCategoryId,
+  parseFavoriteCategories,
+} from "@/lib/categories";
+import type {
+  CategoryId,
+  Currency,
+  CustomCategory,
+  Locale,
+  Settings,
+  Theme,
+  Transaction,
+  TxKind,
+} from "@/lib/types";
+
+export type TxSheetDraft = {
+  kind: TxKind;
+  amountText: string;
+  title: string;
+  note: string;
+  unnecessary: boolean;
+};
 
 export type Sheet =
   | { type: "add" }
   | { type: "sms"; text?: string }
   | { type: "paste" }
   | { type: "calendar" }
-  | { type: "tx"; id: string | null; sms?: string; kind?: TxKind; category?: CategoryId }
+  | {
+      type: "tx";
+      id: string | null;
+      sms?: string;
+      kind?: TxKind;
+      category?: CategoryId;
+      draft?: TxSheetDraft;
+    }
   | { type: "confirm"; tx: Transaction; sms: string; old?: boolean }
   | null;
+
+/** Saved when leaving the expense/income sheet to create a category. */
+export type CategoryReturn = {
+  returnPath: string;
+  sheet: Extract<Sheet, { type: "tx" }>;
+};
 
 type Toast = { id: number; message: string; tone: "neutral" | "error" };
 
@@ -44,9 +79,18 @@ type StoreValue = {
   selectedDay: DayKey;
   sheet: Sheet;
   toast: Toast | null;
+  categoryReturn: CategoryReturn | null;
+  beginCategoryReturn: (value: CategoryReturn) => void;
+  finishCategoryReturn: (category: CategoryId) => CategoryReturn | null;
+  cancelCategoryReturn: () => CategoryReturn | null;
   setLocale: (locale: Locale) => void;
   setCurrency: (currency: Currency) => void;
   setTheme: (theme: Theme) => void;
+  setFavoriteCategories: (favorites: CategoryId[]) => void;
+  toggleFavoriteCategory: (category: CategoryId) => void;
+  addCustomCategory: (name: string) => CategoryId | null;
+  renameCustomCategory: (id: CategoryId, name: string) => boolean;
+  deleteCustomCategory: (id: CategoryId) => boolean;
   setSelectedDay: (day: DayKey) => void;
   openSheet: (sheet: Sheet) => void;
   closeSheet: () => void;
@@ -112,6 +156,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState(initial.transactions);
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
   const [sheet, setSheet] = useState<Sheet>(initial.sheet);
+  const [categoryReturn, setCategoryReturn] = useState<CategoryReturn | null>(null);
   const [toast, setToast] = useState<Toast | null>(() =>
     initial.notice
       ? { id: 0, message: dictionaries[initial.settings.locale].confirmSms[initial.notice], tone: "neutral" }
@@ -313,6 +358,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     notify(t.confirmSms.rejected);
   }, [notify, t]);
 
+  const beginCategoryReturn = useCallback((value: CategoryReturn) => {
+    setCategoryReturn(value);
+    setSheet(null);
+  }, []);
+
+  const finishCategoryReturn = useCallback(
+    (category: CategoryId) => {
+      if (!categoryReturn) return null;
+      const restored = categoryReturn;
+      setCategoryReturn(null);
+      setSheet({
+        ...restored.sheet,
+        category,
+        kind: restored.sheet.draft?.kind ?? restored.sheet.kind,
+      });
+      return restored;
+    },
+    [categoryReturn],
+  );
+
+  const cancelCategoryReturn = useCallback(() => {
+    if (!categoryReturn) return null;
+    const restored = categoryReturn;
+    setCategoryReturn(null);
+    setSheet(restored.sheet);
+    return restored;
+  }, [categoryReturn]);
+
   const value = useMemo<StoreValue>(
     () => ({
       t,
@@ -321,9 +394,81 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       selectedDay,
       sheet,
       toast,
+      categoryReturn,
+      beginCategoryReturn,
+      finishCategoryReturn,
+      cancelCategoryReturn,
       setLocale: (locale) => updateSettings({ locale }),
       setCurrency: (currency) => updateSettings({ currency }),
       setTheme: (theme) => updateSettings({ theme }),
+      setFavoriteCategories: (favorites) =>
+        updateSettings({
+          favoriteCategories: parseFavoriteCategories(
+            favorites.join(",") || "",
+            settings.customCategories,
+          ),
+        }),
+      toggleFavoriteCategory: (category) => {
+        const current = settings.favoriteCategories;
+        const next = current.includes(category)
+          ? current.filter((id) => id !== category)
+          : [...current, category];
+        updateSettings({
+          favoriteCategories: parseFavoriteCategories(
+            next.join(",") || "",
+            settings.customCategories,
+          ),
+        });
+      },
+      addCustomCategory: (name) => {
+        const trimmed = name.trim().slice(0, 40);
+        if (!trimmed) return null;
+        const duplicate = settings.customCategories.some(
+          (item) => item.name.localeCompare(trimmed, undefined, { sensitivity: "accent" }) === 0,
+        );
+        if (duplicate) return null;
+        const id = newCustomCategoryId();
+        const customCategories: CustomCategory[] = [
+          ...settings.customCategories,
+          { id, name: trimmed },
+        ];
+        updateSettings({
+          customCategories,
+          favoriteCategories: parseFavoriteCategories(
+            [...settings.favoriteCategories, id].join(","),
+            customCategories,
+          ),
+        });
+        return id;
+      },
+      renameCustomCategory: (id, name) => {
+        if (!isCustomCategoryId(id)) return false;
+        const trimmed = name.trim().slice(0, 40);
+        if (!trimmed) return false;
+        const customCategories = settings.customCategories.map((item) =>
+          item.id === id ? { ...item, name: trimmed } : item,
+        );
+        if (!customCategories.some((item) => item.id === id)) return false;
+        updateSettings({ customCategories });
+        return true;
+      },
+      deleteCustomCategory: (id) => {
+        if (!isCustomCategoryId(id)) return false;
+        if (!settings.customCategories.some((item) => item.id === id)) return false;
+        const customCategories = settings.customCategories.filter((item) => item.id !== id);
+        const favoriteCategories = parseFavoriteCategories(
+          settings.favoriteCategories.filter((item) => item !== id).join(",") || "",
+          customCategories,
+        );
+        const nextTxs = transactions.map((tx) =>
+          tx.category === id ? { ...tx, category: "other" as CategoryId } : tx,
+        );
+        updateSettings({ customCategories, favoriteCategories });
+        if (nextTxs.some((tx, index) => tx.category !== transactions[index]?.category)) {
+          commit(nextTxs);
+        }
+        return true;
+      },
       setSelectedDay,
       openSheet: setSheet,
       closeSheet: () => setSheet(null),
@@ -346,7 +491,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       selectedDay,
       sheet,
       toast,
+      categoryReturn,
+      beginCategoryReturn,
+      finishCategoryReturn,
+      cancelCategoryReturn,
       updateSettings,
+      commit,
       notify,
       saveTransaction,
       saveTransactionsBatch,

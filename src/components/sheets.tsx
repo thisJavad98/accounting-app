@@ -22,11 +22,12 @@ export function Sheets() {
       )}
       {sheet?.type === "tx" && (
         <TransactionSheet
-          key={`tx-${sheet.id ?? "new"}-${sheet.kind ?? ""}`}
+          key={`tx-${sheet.id ?? "new"}-${sheet.kind ?? ""}-${sheet.category ?? ""}-${sheet.draft ? "d" : "n"}`}
           id={sheet.id}
           sms={sheet.sms}
           defaultKind={sheet.kind}
           defaultCategory={sheet.category}
+          draft={sheet.draft}
         />
       )}
     </AnimatePresence>

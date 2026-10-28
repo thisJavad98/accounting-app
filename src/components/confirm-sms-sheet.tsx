@@ -2,11 +2,10 @@
 
 import { ArrowDownLeft, ArrowUpRight, Check, Warning, X } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
-import { CATEGORY_IDS } from "@/lib/categories";
 import { dayKey, formatDayLong } from "@/lib/dates";
 import { parseBankSms } from "@/lib/sms-parser";
 import type { CategoryId, Transaction } from "@/lib/types";
-import { CategoryIcon } from "./category-icon";
+import { CategoryPicker } from "./category-picker";
 import { Sheet } from "./sheet";
 import { useStore } from "./store";
 import { SmsDetails } from "./transaction-sheet";
@@ -125,23 +124,7 @@ export function ConfirmSmsSheet({ tx, sms, old }: { tx: Transaction; sms: string
           </p>
         </div>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-3 text-sm font-semibold">{t.form.category}</legend>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_IDS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={category === value}
-                onClick={() => setCategory(value)}
-                className={chipClass(category === value)}
-              >
-                <CategoryIcon category={value} size={18} />
-                {t.categories[value]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <CategoryPicker value={category} onChange={setCategory} />
 
         <div className="grid grid-cols-2 gap-2">
           <button type="button" onClick={rejectSms} className={dangerButton}>
