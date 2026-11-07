@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { PoweredByFooter } from "@/components/powered-by-footer";
 import { landingCopy } from "@/lib/landing-copy";
 import { Bento } from "./bento";
 import { Hero } from "./hero";
@@ -32,6 +33,7 @@ export function Landing() {
         <Steps copy={copy} locale={locale} />
         <FinalCta copy={copy} locale={locale} />
       </main>
+      <PoweredByFooter />
     </div>
   );
 }

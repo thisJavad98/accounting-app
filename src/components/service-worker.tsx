@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { warmOfflineShell } from "@/lib/offline";
 
 type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
@@ -40,7 +41,10 @@ export function ServiceWorker() {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then(() => warmOfflineShell())
+        .catch(() => {});
     }
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);

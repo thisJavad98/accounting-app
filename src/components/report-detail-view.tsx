@@ -10,9 +10,10 @@ import {
   Prohibit,
   Trash,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { navigateWithRouter } from "@/lib/offline";
+import { AppLink } from "./app-link";
 import {
   dayKey,
   formatDayLong,
@@ -155,7 +156,7 @@ export function ReportDetailView({ monthParam }: { monthParam: string }) {
     setConfirmDeleteAll(false);
     const nextStart = shiftMonth(monthStartDay, locale, direction);
     setSelectedDay(sameMonth(nextStart, today, locale) ? today : nextStart);
-    router.push(`/app/reports/${nextStart}`);
+    navigateWithRouter(router, `/app/reports/${nextStart}`);
   }
 
   function addIncomeForMonth() {
@@ -171,13 +172,13 @@ export function ReportDetailView({ monthParam }: { monthParam: string }) {
   return (
     <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <div className="flex items-center justify-between gap-2">
-        <Link
+        <AppLink
           href="/app/reports"
           className="inline-flex h-10 items-center gap-1 rounded-full bg-sunken ps-2.5 pe-4 text-sm font-medium text-ink active:scale-[0.97]"
         >
           <CaretLeft size={16} weight="bold" className="rtl:rotate-180" aria-hidden />
           {t.reports.backToReports}
-        </Link>
+        </AppLink>
         <div className="flex items-center gap-1.5">
           <button
             type="button"

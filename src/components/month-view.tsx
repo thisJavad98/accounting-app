@@ -2,7 +2,6 @@
 
 import { CaretLeft, CaretRight, ChartDonut, PiggyBank, Plus, Prohibit, Trash } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -17,7 +16,9 @@ import {
 } from "@/lib/dates";
 import { categoryLabel } from "@/lib/categories";
 import { formatNumber } from "@/lib/format";
+import { navigateWithRouter } from "@/lib/offline";
 import type { CategoryId, Transaction } from "@/lib/types";
+import { AppLink } from "./app-link";
 import { CategoryIcon } from "./category-icon";
 import { Money } from "./money";
 import { useStore } from "./store";
@@ -151,7 +152,7 @@ export function MonthView() {
 
   function openDay(day: string) {
     setSelectedDay(day);
-    router.push("/app");
+    navigateWithRouter(router, "/app");
   }
 
   function addSalaryOrIncome() {
@@ -313,13 +314,13 @@ export function MonthView() {
             ) : (
               <p className="text-xs leading-relaxed text-muted">{t.month.noUnnecessaryYet}</p>
             )}
-            <Link
+            <AppLink
               href={`/app/reports/${days[0]}`}
               className={`${primaryButton} h-11 text-sm`}
             >
               <PiggyBank size={18} weight="bold" aria-hidden />
               {t.month.openFullReport}
-            </Link>
+            </AppLink>
           </section>
 
           {/* Incoming Money & Salary Section */}

@@ -9,8 +9,8 @@ import {
   Prohibit,
   Sparkle,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import { AppLink } from "./app-link";
 import {
   dayKey,
   formatMonth,
@@ -261,7 +261,7 @@ export function ReportsView() {
             </dl>
           </div>
 
-          <Link
+          <AppLink
             href={`/app/reports/${activeMonth.startDay}`}
             onClick={() => setSelectedDay(activeMonth.startDay)}
             className={`${primaryButton} h-12 text-sm`}
@@ -269,7 +269,7 @@ export function ReportsView() {
             <Sparkle size={18} weight="fill" aria-hidden />
             {t.reports.openDetail}
             <Chevron size={16} weight="bold" aria-hidden />
-          </Link>
+          </AppLink>
         </section>
       )}
 
@@ -279,7 +279,7 @@ export function ReportsView() {
         <ul className="flex flex-col gap-2.5">
           {months.map((m) => (
             <li key={m.startDay}>
-              <Link
+              <AppLink
                 href={`/app/reports/${m.startDay}`}
                 onClick={() => setSelectedDay(m.startDay)}
                 className="flex items-center justify-between gap-3 rounded-2xl bg-sunken p-4 transition-transform active:scale-[0.99]"
@@ -331,7 +331,7 @@ export function ReportsView() {
                   </div>
                   <Chevron size={18} className="text-faint" aria-hidden />
                 </div>
-              </Link>
+              </AppLink>
             </li>
           ))}
         </ul>

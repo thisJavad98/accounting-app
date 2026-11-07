@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
 import { formatAmountInput, formatNumber, newId, parseAmount } from "@/lib/format";
+import { navigateWithRouter } from "@/lib/offline";
 import { parseBankSms, type ParsedSms } from "@/lib/sms-parser";
 import type { CategoryId, Transaction, TxKind } from "@/lib/types";
 import { CategoryPicker } from "./category-picker";
@@ -133,7 +134,7 @@ export function TransactionSheet({
         draft: { kind, amountText, title, note, unnecessary },
       },
     });
-    router.push("/app/settings/categories?new=1");
+    navigateWithRouter(router, "/app/settings/categories?new=1");
   }
   const [errors, setErrors] = useState<{ amount?: boolean; title?: boolean }>({});
   const [confirmDelete, setConfirmDelete] = useState(false);

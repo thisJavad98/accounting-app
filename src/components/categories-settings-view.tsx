@@ -1,7 +1,6 @@
 "use client";
 
 import { CaretLeft, Plus, Star, Trash } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,7 +9,9 @@ import {
   isCustomCategoryId,
   orderedCategories,
 } from "@/lib/categories";
+import { navigateWithRouter } from "@/lib/offline";
 import type { CategoryId } from "@/lib/types";
+import { AppLink } from "./app-link";
 import { CategoryIcon } from "./category-icon";
 import { useStore } from "./store";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
@@ -116,7 +117,7 @@ export function CategoriesSettingsView() {
 
   function goBackToTx() {
     const restored = cancelCategoryReturn();
-    router.replace(restored?.returnPath ?? "/app");
+    navigateWithRouter(router, restored?.returnPath ?? "/app", "replace");
   }
 
   const popular = useMemo(() => {
@@ -157,7 +158,7 @@ export function CategoriesSettingsView() {
     notify(copy.createDone);
     if (categoryReturn) {
       const restored = finishCategoryReturn(id);
-      router.replace(restored?.returnPath ?? "/app");
+      navigateWithRouter(router, restored?.returnPath ?? "/app", "replace");
     }
   }
 
@@ -174,13 +175,13 @@ export function CategoriesSettingsView() {
             {t.form.newTx}
           </button>
         ) : (
-          <Link
+          <AppLink
             href="/app/settings"
             className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-muted"
           >
             <CaretLeft size={16} weight="bold" className="rtl:rotate-180" aria-hidden />
             {copy.back}
-          </Link>
+          </AppLink>
         )}
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-black tracking-tight">{copy.title}</h1>

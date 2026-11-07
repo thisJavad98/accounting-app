@@ -6,7 +6,7 @@ Live: [accounting-app-lemon-nine.vercel.app](https://accounting-app-lemon-nine.v
 
 Settings has an install button, light, dark and system themes, language, currency, JSON backup and CSV export.
 
-It is an installable PWA: manifest with maskable icons, screenshots and shortcuts, an Android share target, and a service worker that precaches the app pages so it opens offline. The logo lives in `src/components/logo.tsx`; `src/app/icon.svg` is the favicon and `/icons/{192,512,maskable,apple}` renders the PNG icons from the same mark.
+It is an installable PWA: manifest with maskable icons, screenshots and shortcuts, an Android share target, and a service worker that precaches the app shell. After you open `/app` once online (or install to the home screen), day, month, reports and settings work offline — data stays in cookies on the device, and in-app navigation falls back to cached HTML when there is no network. The logo lives in `src/components/logo.tsx`; `src/app/icon.svg` is the favicon and `/icons/{192,512,maskable,apple}` renders the PNG icons from the same mark.
 
 ## Run
 

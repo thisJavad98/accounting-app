@@ -465,7 +465,7 @@ export function FinalCta({ copy, locale }: { copy: LandingCopy; locale: Locale }
           </div>
         </div>
       </motion.div>
-      <footer className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-3 pt-8 pb-6 text-sm text-muted md:flex-row md:items-center">
+      <footer className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-3 pt-8 pb-14 text-sm text-muted md:flex-row md:items-center">
         <span className="inline-flex items-center gap-2 font-black text-brand">
           <LogoMark size={24} className="rounded-[7px]" />
           {copy.brand}

@@ -15,14 +15,20 @@ import {
   Warning,
   type Icon,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { categoryLabel } from "@/lib/categories";
 import { exportJson, parseBackup, STORAGE_CAPACITY, storageUsed } from "@/lib/cookie-store";
 import { dayKey, fromDayKey, todayKey } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
+import {
+  getOnline,
+  getServiceWorkerReady,
+  subscribeOnline,
+  subscribeServiceWorkerReady,
+} from "@/lib/offline";
 import type { CustomCategory, Currency, Locale, Theme, Transaction } from "@/lib/types";
 import type { Dictionary } from "@/lib/i18n";
+import { AppLink } from "./app-link";
 import { LogoMark } from "./logo";
 import { installPrompt } from "./service-worker";
 import { useStore } from "./store";
@@ -99,6 +105,8 @@ function InstallCard() {
     () => false,
   );
   const ios = useSyncExternalStore(noop, () => /iphone|ipad|ipod/i.test(navigator.userAgent), () => false);
+  const online = useSyncExternalStore(subscribeOnline, getOnline, () => true);
+  const swReady = useSyncExternalStore(subscribeServiceWorkerReady, getServiceWorkerReady, () => false);
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-sunken p-4">
@@ -106,6 +114,10 @@ function InstallCard() {
         <LogoMark size={48} className="shrink-0 rounded-xl" />
         <p className="text-sm leading-relaxed">{installed ? t.settings.installed : t.settings.installBody}</p>
       </div>
+      <p className="text-sm leading-relaxed text-muted">
+        {swReady ? t.settings.offlineReady : t.settings.offlineNotReady}
+        {!online ? ` ${t.settings.offlineNow}` : ""}
+      </p>
       {!installed &&
         (prompt ? (
           <button
@@ -219,7 +231,7 @@ export function SettingsView() {
       </Section>
 
       <Section title={t.settings.categoriesTitle}>
-        <Link
+        <AppLink
           href="/app/settings/categories"
           className="flex items-center gap-3 rounded-2xl bg-sunken p-3 active:scale-[0.99]"
         >
@@ -231,7 +243,7 @@ export function SettingsView() {
             <span className="text-xs text-muted">{t.settings.categoriesLinkHint}</span>
           </span>
           <CaretRight size={18} weight="bold" className="shrink-0 text-faint rtl:rotate-180" aria-hidden />
-        </Link>
+        </AppLink>
       </Section>
 
       <Section title={t.settings.smsTitle}>
@@ -239,7 +251,7 @@ export function SettingsView() {
           <p className="font-medium">{t.settings.smsAuto}</p>
           <p>{t.settings.smsAndroid}</p>
           <p>{t.settings.smsIos}</p>
-          <Link
+          <AppLink
             href="/app/settings/sms-ios"
             className="flex items-center gap-3 rounded-xl bg-surface p-3 active:scale-[0.99]"
           >
@@ -251,7 +263,7 @@ export function SettingsView() {
               <span className="text-xs text-muted">{t.settings.smsIosGuideHint}</span>
             </span>
             <CaretRight size={18} weight="bold" className="shrink-0 text-faint rtl:rotate-180" aria-hidden />
-          </Link>
+          </AppLink>
         </div>
       </Section>
 

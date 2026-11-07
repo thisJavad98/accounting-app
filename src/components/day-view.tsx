@@ -16,12 +16,13 @@ import {
   todayKey,
 } from "@/lib/dates";
 import { formatNumber } from "@/lib/format";
+import { navigateWithRouter } from "@/lib/offline";
 import { BankInventoryCard } from "./bank-inventory-card";
+import { LogoMark } from "./logo";
 import { Money } from "./money";
 import { useStore } from "./store";
 import { TransactionRow } from "./transaction-row";
 import { primaryButton, secondaryButton } from "./ui";
-import { LogoMark } from "./logo";
 import { useRouter } from "next/navigation";
 
 /** A drag is a day change once it passes either of these. */
@@ -40,7 +41,7 @@ export function DayView() {
   const { t, settings, transactions, selectedDay, setSelectedDay, openSheet } = useStore();
   const reduce = useReducedMotion();
   const locale = settings.locale;
-  const { push } =useRouter();
+  const router = useRouter();
   const today = todayKey();
   const rtl = locale === "fa";
   const Prev = rtl ? CaretRight : CaretLeft;
@@ -119,7 +120,7 @@ export function DayView() {
   return (
     <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <header className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand cursor-pointer" onClick={() => push("/")}>
+        <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand cursor-pointer" onClick={() => navigateWithRouter(router, "/")}>
           <LogoMark size={28} className="rounded-lg" />
           {t.appName}
         </span>
@@ -244,7 +245,7 @@ export function DayView() {
                 type="button"
                 onClick={() => {
                   setSelectedDay(monthReviewTarget.day);
-                  push(`/app/reports/${monthDays(monthReviewTarget.day, locale)[0]}`);
+                  navigateWithRouter(router, `/app/reports/${monthDays(monthReviewTarget.day, locale)[0]}`);
                 }}
                 className="flex items-center gap-3 rounded-2xl bg-sunken px-4 py-3.5 text-start transition-transform active:scale-[0.98]"
               >

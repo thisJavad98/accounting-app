@@ -1,8 +1,9 @@
 "use client";
 
 import { CalendarDots, ChartDonut, GearSix, PiggyBank, Plus, type Icon } from "@phosphor-icons/react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AppLink } from "./app-link";
+import { PoweredByCredit } from "./powered-by-footer";
 import { useStore } from "./store";
 
 export function BottomNav() {
@@ -28,30 +29,30 @@ export function BottomNav() {
           {t.nav.add}
         </button>
       </div>
-      <nav
-        aria-label={t.appName}
-        className="pointer-events-auto border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
-      >
-        <ul className="grid grid-cols-4">
-          {items.map(({ href, label, icon: Glyph }) => {
-            const active = pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
-                    active ? "text-brand" : "text-muted"
-                  }`}
-                >
-                  <Glyph size={24} weight={active ? "fill" : "regular"} aria-hidden />
-                  {label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <div className="pointer-events-auto border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+        <nav aria-label={t.appName}>
+          <ul className="grid grid-cols-4">
+            {items.map(({ href, label, icon: Glyph }) => {
+              const active = pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
+              return (
+                <li key={href}>
+                  <AppLink
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                      active ? "text-brand" : "text-muted"
+                    }`}
+                  >
+                    <Glyph size={24} weight={active ? "fill" : "regular"} aria-hidden />
+                    {label}
+                  </AppLink>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <PoweredByCredit className="border-t border-line/60 px-3 py-1.5" />
+      </div>
     </div>
   );
 }

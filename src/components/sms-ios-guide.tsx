@@ -1,10 +1,10 @@
 "use client";
 
 import { CaretLeft, Check, Copy, Info } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useState } from "react";
 import { formatNumber } from "@/lib/format";
 import { SHORTCUT_URL } from "@/lib/site";
+import { AppLink } from "./app-link";
 import {
   AddTriggerScreen,
   AutomationListScreen,
@@ -72,13 +72,13 @@ export function SmsIosGuide() {
   return (
     <div className="flex flex-col gap-9 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <div className="flex flex-col gap-4">
-        <Link
+        <AppLink
           href="/app/settings"
           className="inline-flex h-10 w-fit items-center gap-1 rounded-full bg-sunken ps-2.5 pe-4 text-sm font-medium text-ink active:scale-[0.97]"
         >
           <CaretLeft size={16} weight="bold" className="rtl:rotate-180" aria-hidden />
           {g.back}
-        </Link>
+        </AppLink>
         <h1 className="text-2xl font-black tracking-tight">{g.title}</h1>
         <p className="text-sm leading-relaxed text-muted">{g.intro}</p>
       </div>
@@ -124,10 +124,10 @@ export function SmsIosGuide() {
         <p className="text-sm leading-relaxed text-muted">{g.older}</p>
       </section>
 
-      <Link href="/app/settings" className={`${secondaryButton} h-12 text-sm`}>
+      <AppLink href="/app/settings" className={`${secondaryButton} h-12 text-sm`}>
         <CaretLeft size={18} className="rtl:rotate-180" aria-hidden />
         {g.back}
-      </Link>
+      </AppLink>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { BuiltinCategoryId, Currency, Locale } from "./types";
 
 const fa = {
   appName: "دخل",
+  offlineBanner: "آفلاین — داده‌ها روی همین دستگاه می‌مانند",
   nav: { day: "روزانه", month: "ماهانه", reports: "گزارش‌ها", settings: "تنظیمات", add: "افزودن" },
   day: {
     today: "امروز",
@@ -195,6 +196,9 @@ const fa = {
     installed: "دخل روی این دستگاه نصب شده است.",
     installIos: "در سافاری دکمه «اشتراک‌گذاری» را بزنید و «افزودن به صفحه اصلی» را انتخاب کنید.",
     installOther: "از منوی مرورگر گزینه «نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید.",
+    offlineReady: "آمادهٔ کار آفلاین: یک‌بار آنلاین باز کرده‌اید و صفحات برنامه ذخیره شده‌اند.",
+    offlineNotReady: "برای فعال شدن حالت آفلاین، یک‌بار با اینترنت برنامه را باز کنید.",
+    offlineNow: "الان آفلاین هستید.",
     copy: "کپی",
     copied: "کپی شد",
     storage: "ذخیره‌سازی",
@@ -340,6 +344,7 @@ export type Dictionary = typeof fa;
 
 const en: Dictionary = {
   appName: "Dakhl",
+  offlineBanner: "Offline — your data stays on this device",
   nav: { day: "Day", month: "Month", reports: "Reports", settings: "Settings", add: "Add" },
   day: {
     today: "Today",
@@ -533,6 +538,9 @@ const en: Dictionary = {
     installed: "Dakhl is installed on this device.",
     installIos: "In Safari, tap Share, then choose Add to Home Screen.",
     installOther: "Open the browser menu and choose Install app or Add to Home Screen.",
+    offlineReady: "Ready for offline: you opened the app online once and its pages are cached.",
+    offlineNotReady: "Open the app once online to enable offline use.",
+    offlineNow: "You are offline now.",
     copy: "Copy",
     copied: "Copied",
     storage: "Storage",
