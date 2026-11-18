@@ -43,6 +43,8 @@ export type TxSheetDraft = {
   title: string;
   note: string;
   unnecessary: boolean;
+  fromAccount?: string;
+  toAccount?: string;
 };
 
 export type Sheet =

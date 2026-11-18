@@ -1,5 +1,5 @@
 import { deflateSync, inflateSync } from "fflate";
-import type { CategoryId, Currency, Locale, Settings, Theme, Transaction } from "./types";
+import type { CategoryId, Currency, Locale, Settings, Theme, Transaction, TxKind } from "./types";
 import {
   isBuiltinCategory,
   isCustomCategoryId,
@@ -31,7 +31,7 @@ export const STORAGE_CAPACITY = CHUNK_SIZE * MAX_CHUNKS;
 
 type TxTuple = [
   string,
-  0 | 1,
+  0 | 1 | 2,
   number,
   number,
   string,
@@ -40,7 +40,17 @@ type TxTuple = [
   string,
   number | null,
   (0 | 1)?,
+  string?,
+  string?,
 ];
+
+const KIND_CODES = { expense: 0, income: 1, transfer: 2 } as const satisfies Record<TxKind, number>;
+
+function kindFromCode(code: unknown): TxKind {
+  if (code === 1 || code === "income") return "income";
+  if (code === 2 || code === "transfer") return "transfer";
+  return "expense";
+}
 
 function readCookies(): Map<string, string> {
   const map = new Map<string, string>();
@@ -77,7 +87,7 @@ function decode(payload: string): string {
 function toTuple(tx: Transaction): TxTuple {
   const tuple: TxTuple = [
     tx.id,
-    tx.kind === "income" ? 1 : 0,
+    KIND_CODES[tx.kind],
     tx.amount,
     Math.round(tx.at / 1000),
     tx.title,
@@ -86,19 +96,20 @@ function toTuple(tx: Transaction): TxTuple {
     tx.bank,
     tx.balance,
   ];
-  if (tx.unnecessary) tuple.push(1);
+  if (tx.kind === "transfer") tuple.push(0, tx.fromAccount ?? "", tx.toAccount ?? "");
+  else if (tx.unnecessary) tuple.push(1);
   return tuple;
 }
 
 function fromTuple(raw: unknown): Transaction | null {
   if (!Array.isArray(raw) || raw.length < 8) return null;
-  const [id, kind, amount, at, title, note, category, bank, balance, unnecessary] = raw;
+  const [id, kind, amount, at, title, note, category, bank, balance, unnecessary, from, to] = raw;
   if (typeof id !== "string" || typeof amount !== "number" || typeof at !== "number") {
     return null;
   }
   const tx: Transaction = {
     id,
-    kind: kind === 1 ? "income" : "expense",
+    kind: kindFromCode(kind),
     amount,
     at: at * 1000,
     title: String(title ?? ""),
@@ -110,7 +121,12 @@ function fromTuple(raw: unknown): Transaction | null {
     bank: String(bank ?? ""),
     balance: typeof balance === "number" ? balance : null,
   };
-  if (unnecessary === 1 || unnecessary === true) tx.unnecessary = true;
+  if (tx.kind === "transfer") {
+    tx.fromAccount = String(from ?? "");
+    tx.toAccount = String(to ?? "");
+  } else if (unnecessary === 1 || unnecessary === true) {
+    tx.unnecessary = true;
+  }
   return tx;
 }
 
@@ -141,7 +157,7 @@ export function parseBackup(json: string): Transaction[] {
 function looseTuple(obj: Record<string, unknown>): unknown[] {
   return [
     obj.id,
-    obj.kind === "income" ? 1 : 0,
+    KIND_CODES[kindFromCode(obj.kind)],
     obj.amount,
     typeof obj.at === "number" ? Math.round(obj.at / 1000) : obj.at,
     obj.title,
@@ -150,6 +166,8 @@ function looseTuple(obj: Record<string, unknown>): unknown[] {
     obj.bank,
     obj.balance,
     obj.unnecessary ? 1 : 0,
+    obj.fromAccount,
+    obj.toAccount,
   ];
 }
 

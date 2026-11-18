@@ -91,6 +91,7 @@ export function DayView() {
 
   const spent = dayTxs.filter((tx) => tx.kind === "expense").reduce((s, tx) => s + tx.amount, 0);
   const received = dayTxs.filter((tx) => tx.kind === "income").reduce((s, tx) => s + tx.amount, 0);
+  const moved = dayTxs.filter((tx) => tx.kind === "transfer").reduce((s, tx) => s + tx.amount, 0);
 
   const lastStripDay = selectedDay >= addDays(today, -3) ? today : addDays(selectedDay, 3);
   const strip = Array.from({ length: 7 }, (_, i) => addDays(lastStripDay, i - 6));
@@ -217,6 +218,12 @@ export function DayView() {
                     <span className="inline-flex items-center gap-1">
                       {t.day.income}
                       <Money value={received} sign="+" className="font-semibold text-brand-ink" unitClassName="text-xs" />
+                    </span>
+                  )}
+                  {moved > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      {t.day.transfers}
+                      <Money value={moved} className="font-semibold" unitClassName="text-xs" />
                     </span>
                   )}
                   <span>{t.day.entries(formatNumber(dayTxs.length, locale))}</span>

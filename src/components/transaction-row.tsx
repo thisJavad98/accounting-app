@@ -20,7 +20,11 @@ export function TransactionRow({
   const untitled = !tx.title;
   const unnecessary = tx.kind === "expense" && !!tx.unnecessary;
   const bank = tx.bank === tx.title ? "" : tx.bank;
-  const meta = [showTime ? formatTime(tx.at, settings.locale) : "", tx.note || bank]
+  const route =
+    tx.kind === "transfer"
+      ? [tx.fromAccount, tx.toAccount].join(settings.locale === "fa" ? " \u2190 " : " \u2192 ")
+      : "";
+  const meta = [showTime ? formatTime(tx.at, settings.locale) : "", route || tx.note || bank]
     .filter(Boolean)
     .join("  |  ");
 
@@ -54,9 +58,15 @@ export function TransactionRow({
         </span>
         <Money
           value={tx.amount}
-          sign={tx.kind === "income" ? "+" : "-"}
+          sign={tx.kind === "income" ? "+" : tx.kind === "expense" ? "-" : undefined}
           className={`shrink-0 text-base font-bold ${
-            tx.kind === "income" ? "text-brand-ink" : unnecessary ? "line-through opacity-55" : ""
+            tx.kind === "income"
+              ? "text-brand-ink"
+              : tx.kind === "transfer"
+                ? "text-muted"
+                : unnecessary
+                  ? "line-through opacity-55"
+                  : ""
           }`}
         />
       </button>

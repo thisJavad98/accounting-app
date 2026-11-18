@@ -61,13 +61,13 @@ function toCsv(
       [
         date.format(fromDayKey(dayKey(new Date(tx.at)))),
         new Date(tx.at).toTimeString().slice(0, 5),
-        tx.kind === "income" ? t.form.income : t.form.expense,
+        t.form[tx.kind],
         tx.amount,
         t.currencies[currency],
         tx.title,
         tx.note,
         categoryLabel(tx.category, t.categories, customs),
-        tx.bank,
+        tx.kind === "transfer" ? `${tx.fromAccount} > ${tx.toAccount}` : tx.bank,
         tx.balance ?? "",
       ]
         .map(cell)

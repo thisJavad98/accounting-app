@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, Prohibit, Trash } from "@phosphor-icons/react";
+import { ArrowDownLeft, ArrowsLeftRight, ArrowUpRight, Prohibit, Trash } from "@phosphor-icons/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
 import { formatAmountInput, formatNumber, newId, parseAmount } from "@/lib/format";
+import { normalizeBankKey } from "@/lib/inventory";
 import { navigateWithRouter } from "@/lib/offline";
 import { parseBankSms, type ParsedSms } from "@/lib/sms-parser";
 import type { CategoryId, Transaction, TxKind } from "@/lib/types";
@@ -48,7 +49,7 @@ export function SmsDetails({
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">{t.form.extracted}</span>
         <span className="text-xl font-black tabular-nums">
-          {tx.kind === "income" ? "+" : "\u2212"}
+          {tx.kind === "income" ? "+" : tx.kind === "expense" ? "\u2212" : ""}
           {formatNumber(tx.amount, locale)} <span className="text-xs font-medium">{unit}</span>
         </span>
       </div>
@@ -69,6 +70,61 @@ export function SmsDetails({
             {sms}
           </p>
         </details>
+      )}
+    </div>
+  );
+}
+
+function AccountField({
+  id,
+  label,
+  value,
+  onChange,
+  suggestions,
+  error,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  suggestions: string[];
+  error?: string;
+}) {
+  const { t } = useStore();
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-sm font-semibold">
+        {label}
+      </label>
+      <input
+        id={id}
+        value={value}
+        maxLength={40}
+        autoComplete="off"
+        placeholder={t.form.accountPlaceholder}
+        onChange={(event) => onChange(event.target.value)}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className={inputClass}
+      />
+      {error && (
+        <p id={`${id}-error`} className="text-sm font-medium text-danger">
+          {error}
+        </p>
+      )}
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {suggestions.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => onChange(name)}
+              className={chipClass(value.trim() === name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -121,6 +177,33 @@ export function TransactionSheet({
   const [unnecessary, setUnnecessary] = useState<boolean>(
     draft?.unnecessary ?? !!existing?.unnecessary,
   );
+  const [fromAccount, setFromAccount] = useState(
+    () =>
+      draft?.fromAccount ??
+      (existing?.kind === "transfer" ? existing.fromAccount ?? "" : existing?.kind === "expense" ? existing.bank : ""),
+  );
+  const [toAccount, setToAccount] = useState(
+    () =>
+      draft?.toAccount ??
+      (existing?.kind === "transfer" ? existing.toAccount ?? "" : existing?.kind === "income" ? existing.bank : ""),
+  );
+  const transfer = kind === "transfer";
+
+  const knownAccounts = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const tx of [...transactions].sort((a, b) => b.at - a.at)) {
+      for (const name of [tx.fromAccount, tx.toAccount, tx.bank]) {
+        const label = name?.trim();
+        if (!label) continue;
+        const key = normalizeBankKey(label, label);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        result.push(label);
+      }
+    }
+    return result;
+  }, [transactions]);
 
   function openCreateCategory() {
     beginCategoryReturn({
@@ -131,12 +214,18 @@ export function TransactionSheet({
         sms,
         kind,
         category,
-        draft: { kind, amountText, title, note, unnecessary },
+        draft: { kind, amountText, title, note, unnecessary, fromAccount, toAccount },
       },
     });
     navigateWithRouter(router, "/app/settings/categories?new=1");
   }
-  const [errors, setErrors] = useState<{ amount?: boolean; title?: boolean }>({});
+  const [errors, setErrors] = useState<{
+    amount?: boolean;
+    title?: boolean;
+    from?: boolean;
+    to?: boolean;
+    same?: boolean;
+  }>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const ids = useId();
 
@@ -159,22 +248,34 @@ export function TransactionSheet({
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const amount = parseAmount(amountText);
-    const nextErrors = { amount: amount <= 0, title: !title.trim() };
+    const from = fromAccount.trim();
+    const to = toAccount.trim();
+    const nextErrors = {
+      amount: amount <= 0,
+      title: !transfer && !title.trim(),
+      from: transfer && !from,
+      to: transfer && !to,
+      same: transfer && !!from && from === to,
+    };
     setErrors(nextErrors);
-    if (nextErrors.amount || nextErrors.title) return;
+    if (Object.values(nextErrors).some(Boolean)) return;
 
     const tx: Transaction = {
       id: existing?.id ?? newId(),
       kind,
       amount,
       at: existing?.at ?? defaultTimestamp(selectedDay),
-      title: title.trim(),
+      title: title.trim() || (transfer ? t.form.transferTitle(from, to) : ""),
       note: note.trim(),
-      category,
+      category: transfer ? "transfer" : category,
       bank: existing?.bank ?? "",
       balance: existing?.balance ?? null,
       unnecessary: kind === "expense" && unnecessary ? true : undefined,
     };
+    if (transfer) {
+      tx.fromAccount = from;
+      tx.toAccount = to;
+    }
     if (saveTransaction(tx)) {
       notify(t.toast.saved);
       closeSheet();
@@ -188,26 +289,33 @@ export function TransactionSheet({
           <SmsDetails tx={existing} parsed={parsed} sms={sms} />
         )}
 
-        <div role="radiogroup" aria-label={t.form.expense} className="grid grid-cols-2 gap-1 rounded-full bg-sunken p-1">
-          {(["expense", "income"] as const).map((value) => {
-            const active = kind === value;
-            const Glyph = value === "expense" ? ArrowUpRight : ArrowDownLeft;
-            return (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => setKind(value)}
-                className={`inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors ${
-                  active ? "bg-surface text-ink shadow-sm" : "text-muted"
-                }`}
-              >
-                <Glyph size={18} weight="bold" className={active ? "text-brand" : ""} aria-hidden />
-                {value === "expense" ? t.form.expense : t.form.income}
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-2">
+          <div role="radiogroup" aria-label={t.form.kind} className="grid grid-cols-3 gap-1 rounded-full bg-sunken p-1">
+            {(["expense", "income", "transfer"] as const).map((value) => {
+              const active = kind === value;
+              const Glyph =
+                value === "expense" ? ArrowUpRight : value === "income" ? ArrowDownLeft : ArrowsLeftRight;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => {
+                    setKind(value);
+                    setErrors({});
+                  }}
+                  className={`inline-flex h-11 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors ${
+                    active ? "bg-surface text-ink shadow-sm" : "text-muted"
+                  }`}
+                >
+                  <Glyph size={18} weight="bold" className={active ? "text-brand" : ""} aria-hidden />
+                  {t.form[value]}
+                </button>
+              );
+            })}
+          </div>
+          {transfer && <p className="text-sm text-muted">{t.form.transferHint}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -240,6 +348,33 @@ export function TransactionSheet({
           )}
         </div>
 
+        {transfer && (
+          <>
+            <AccountField
+              id={`${ids}-from`}
+              label={t.form.fromAccount}
+              value={fromAccount}
+              onChange={(value) => {
+                setFromAccount(value);
+                setErrors((e) => ({ ...e, from: false, same: false }));
+              }}
+              suggestions={knownAccounts}
+              error={errors.from ? t.form.fromError : undefined}
+            />
+            <AccountField
+              id={`${ids}-to`}
+              label={t.form.toAccount}
+              value={toAccount}
+              onChange={(value) => {
+                setToAccount(value);
+                setErrors((e) => ({ ...e, to: false, same: false }));
+              }}
+              suggestions={knownAccounts}
+              error={errors.to ? t.form.toError : errors.same ? t.form.sameAccountError : undefined}
+            />
+          </>
+        )}
+
         <div className="flex flex-col gap-2">
           <label htmlFor={`${ids}-title`} className="text-sm font-semibold">
             {t.form.titleLabel}
@@ -263,10 +398,10 @@ export function TransactionSheet({
             </p>
           ) : (
             <p id={`${ids}-title-help`} className="text-sm text-muted">
-              {t.form.titleHelper}
+              {transfer ? t.form.titleOptional : t.form.titleHelper}
             </p>
           )}
-          {recentTitles.length > 0 && (
+          {!transfer && recentTitles.length > 0 && (
             <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pt-1" aria-label={t.form.recent}>
               {recentTitles.map((item) => (
                 <button
@@ -304,7 +439,9 @@ export function TransactionSheet({
           </p>
         </div>
 
-        <CategoryPicker value={category} onChange={setCategory} onCreateNew={openCreateCategory} />
+        {!transfer && (
+          <CategoryPicker value={category} onChange={setCategory} onCreateNew={openCreateCategory} />
+        )}
 
         {kind === "expense" && (
           <button
