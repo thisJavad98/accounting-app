@@ -3,7 +3,7 @@ const THISJ_URL = "https://www.linkedin.com/in/mohammad-javad-moghofei-907671214
 export function PoweredByCredit({ className = "" }: { className?: string }) {
   return (
     <p lang="en" className={`text-center text-[11px] text-faint ${className}`}>
-      Powered by{" "}
+      Developed by{" "}
       <a
         href={THISJ_URL}
         target="_blank"
