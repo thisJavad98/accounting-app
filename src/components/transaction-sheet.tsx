@@ -4,7 +4,14 @@ import { ArrowDownLeft, ArrowsLeftRight, ArrowUpRight, Prohibit, Trash } from "@
 import { usePathname, useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { dayKey, formatDayLong, formatTime, fromDayKey, todayKey } from "@/lib/dates";
-import { formatAmountInput, formatNumber, newId, parseAmount } from "@/lib/format";
+import {
+  formatMoney,
+  formatMoneyInput,
+  formatNumber,
+  isIntegerCurrency,
+  newId,
+  parseMoney,
+} from "@/lib/format";
 import { normalizeBankKey } from "@/lib/inventory";
 import { navigateWithRouter } from "@/lib/offline";
 import { parseBankSms, type ParsedSms } from "@/lib/sms-parser";
@@ -164,7 +171,9 @@ export function TransactionSheet({
   const [kind, setKind] = useState<TxKind>(draft?.kind ?? existing?.kind ?? defaultKind);
   const [amountText, setAmountText] = useState(() => {
     if (draft) return draft.amountText;
-    return existing ? formatAmountInput(String(existing.amount), settings.locale) : "";
+    return existing
+      ? formatMoney(existing.amount, settings.locale, settings.currency)
+      : "";
   });
   const parsed = useMemo(() => (sms ? parseBankSms(sms) : null), [sms]);
   const [title, setTitle] = useState(
@@ -247,7 +256,7 @@ export function TransactionSheet({
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    const amount = parseAmount(amountText);
+    const amount = parseMoney(amountText, settings.currency);
     const from = fromAccount.trim();
     const to = toAccount.trim();
     const nextErrors = {
@@ -325,12 +334,12 @@ export function TransactionSheet({
           <div className="relative">
             <input
               id={`${ids}-amount`}
-              inputMode="decimal"
+              inputMode={isIntegerCurrency(settings.currency) ? "numeric" : "decimal"}
               autoComplete="off"
               autoFocus={!existing}
               value={amountText}
               onChange={(event) => {
-                setAmountText(formatAmountInput(event.target.value, settings.locale));
+                setAmountText(formatMoneyInput(event.target.value, settings.locale, settings.currency));
                 setErrors((e) => ({ ...e, amount: false }));
               }}
               aria-invalid={!!errors.amount}

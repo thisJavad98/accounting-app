@@ -1,9 +1,23 @@
-import type { Locale } from "./types";
+import type { Currency, Locale } from "./types";
 
 export function toLatinDigits(text: string): string {
   return text
     .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
     .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+}
+
+/** Toman and rial never use fractional amounts in this app. */
+export function isIntegerCurrency(currency: Currency): boolean {
+  return currency === "IRT" || currency === "IRR";
+}
+
+export function moneyFractionDigits(currency: Currency): number {
+  return isIntegerCurrency(currency) ? 0 : 2;
+}
+
+export function roundMoney(value: number, currency: Currency): number {
+  if (!Number.isFinite(value)) return 0;
+  return isIntegerCurrency(currency) ? Math.round(value) : Math.round(value * 100) / 100;
 }
 
 /** Converts a Jalali (Persian) date to Gregorian [year, month, day]. */
@@ -43,25 +57,51 @@ export function toPersianDigits(text: string): string {
 }
 
 /** Live-formats an amount field: keeps one decimal point and groups thousands. */
-export function formatAmountInput(text: string, locale: Locale): string {
+export function formatAmountInput(text: string, locale: Locale, maxFractionDigits = 2): string {
   const latin = toLatinDigits(text).replace(/٫/g, ".").replace(/[^\d.]/g, "");
   const [whole, ...rest] = latin.split(".");
   const grouped = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const out = rest.length ? `${grouped}.${rest.join("").slice(0, 2)}` : grouped;
+  const out = rest.length
+    ? `${grouped}.${rest.join("").slice(0, maxFractionDigits)}`
+    : grouped;
   return locale === "fa" ? toPersianDigits(out) : out;
 }
 
-const numberFormats = new Map<Locale, Intl.NumberFormat>();
+/** Formats a gold weight with exactly 3 decimal places. */
+export function formatGramsValue(value: number, locale: Locale): string {
+  if (!Number.isFinite(value) || value <= 0) return "";
+  const fixed = (Math.round(value * 1000) / 1000).toFixed(3);
+  return formatAmountInput(fixed, locale, 3);
+}
 
-export function formatNumber(value: number, locale: Locale): string {
-  let f = numberFormats.get(locale);
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+export function formatNumber(
+  value: number,
+  locale: Locale,
+  maxFractionDigits = 2,
+): string {
+  const key = `${locale}:${maxFractionDigits}`;
+  let f = numberFormats.get(key);
   if (!f) {
     f = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US", {
-      maximumFractionDigits: 2,
+      maximumFractionDigits: maxFractionDigits,
+      minimumFractionDigits: 0,
     });
-    numberFormats.set(locale, f);
+    numberFormats.set(key, f);
   }
   return f.format(value);
+}
+
+/** Formats a money amount; IRT/IRR are always whole numbers. */
+export function formatMoney(value: number, locale: Locale, currency: Currency): string {
+  const rounded = roundMoney(value, currency);
+  return formatNumber(rounded, locale, moneyFractionDigits(currency));
+}
+
+/** Live-formats a money field; blocks decimals for toman/rial. */
+export function formatMoneyInput(text: string, locale: Locale, currency: Currency): string {
+  return formatAmountInput(text, locale, moneyFractionDigits(currency));
 }
 
 /** Parses user-typed amounts in Latin, Persian or Arabic digits, with any grouping separators. */
@@ -69,6 +109,11 @@ export function parseAmount(text: string): number {
   const clean = toLatinDigits(text).replace(/[٫]/g, ".").replace(/[^\d.]/g, "");
   const value = Number.parseFloat(clean);
   return Number.isFinite(value) ? value : 0;
+}
+
+/** Parses and rounds a money amount for the active currency. */
+export function parseMoney(text: string, currency: Currency): number {
+  return roundMoney(parseAmount(text), currency);
 }
 
 export function newId(): string {

@@ -19,6 +19,7 @@ import {
   saveTransactions,
 } from "@/lib/cookie-store";
 import { dayKey, todayKey, type DayKey } from "@/lib/dates";
+import { roundMoney } from "@/lib/format";
 import { dictionaries, type Dictionary } from "@/lib/i18n";
 import { intakeSms, needsClipboardHandover, readIncomingSms, stripIncomingSms } from "@/lib/sms-intake";
 import {
@@ -191,15 +192,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const commit = useCallback(
     (next: Transaction[]) => {
-      const result = saveTransactions(next);
+      const currency = settings.currency;
+      const normalized = next.map((tx) => ({
+        ...tx,
+        amount: roundMoney(tx.amount, currency),
+        balance: tx.balance == null ? null : roundMoney(tx.balance, currency),
+      }));
+      const result = saveTransactions(normalized);
       if (!result.ok) {
         notify(t.toast.full, "error");
         return false;
       }
-      setTransactions(next);
+      setTransactions(normalized);
       return true;
     },
-    [notify, t],
+    [notify, settings.currency, t],
   );
 
   const updateSettings = useCallback(

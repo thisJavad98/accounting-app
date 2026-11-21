@@ -3,6 +3,8 @@ export const OFFLINE_SHELL = [
   "/app",
   "/app/month",
   "/app/reports",
+  "/app/reports/savings",
+  "/app/reports/prices",
   "/app/settings",
   "/app/settings/categories",
   "/app/settings/sms-ios",

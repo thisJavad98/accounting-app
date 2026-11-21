@@ -20,6 +20,7 @@
   --brand-soft: #fcebe1;
   --brand-ink: #9f350a;
   --danger: #b42318;
+  --success: #079455;
   --shadow: 24 24 27;
 }
 
@@ -37,6 +38,7 @@
   --brand-soft: #3a2216;
   --brand-ink: #f5a273;
   --danger: #f97066;
+  --success: #47cd89;
   --shadow: 0 0 0;
   color-scheme: dark;
 }
@@ -56,6 +58,7 @@
     --brand-soft: #3a2216;
     --brand-ink: #f5a273;
     --danger: #f97066;
+    --success: #47cd89;
     --shadow: 0 0 0;
     color-scheme: dark;
   }
@@ -75,6 +78,7 @@
   --color-brand-soft: var(--brand-soft);
   --color-brand-ink: var(--brand-ink);
   --color-danger: var(--danger);
+  --color-success: var(--success);
   --font-sans: var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
   --font-latin: var(--font-geist), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
 }
@@ -127,11 +131,30 @@ html:has(body .marquee) {
   animation-play-state: paused;
 }
 
+@keyframes live-ticker-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.live-ticker-track {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  animation: live-ticker-scroll 48s linear infinite;
+}
+.live-ticker-track:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:has(body .marquee) {
     scroll-behavior: auto;
   }
-  .marquee {
+  .marquee,
+  .live-ticker-track {
     animation: none;
   }
 }

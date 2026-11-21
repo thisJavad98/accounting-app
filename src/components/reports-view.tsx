@@ -5,6 +5,8 @@ import {
   ArrowUpRight,
   CaretLeft,
   CaretRight,
+  ChartDonut,
+  ChartLineUp,
   PiggyBank,
   Prohibit,
   Sparkle,
@@ -130,6 +132,39 @@ export function ReportsView() {
         <h1 className="text-2xl font-black tracking-tight">{t.reports.title}</h1>
         <p className="text-sm leading-relaxed text-muted">{t.reports.subtitle}</p>
       </header>
+
+      <section className="flex flex-col gap-2.5">
+        <AppLink
+          href="/app/month"
+          className="flex items-center justify-between gap-3 rounded-2xl bg-sunken p-4 transition-transform active:scale-[0.99]"
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-ink">
+              <ChartDonut size={22} weight="duotone" aria-hidden />
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-bold">{t.reports.monthLink}</span>
+              <span className="text-xs leading-relaxed text-muted">{t.reports.monthLinkHint}</span>
+            </div>
+          </div>
+          <Chevron size={18} className="shrink-0 text-faint" aria-hidden />
+        </AppLink>
+        <AppLink
+          href="/app/reports/prices"
+          className="flex items-center justify-between gap-3 rounded-2xl bg-sunken p-4 transition-transform active:scale-[0.99]"
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-ink">
+              <ChartLineUp size={22} weight="duotone" aria-hidden />
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-bold">{t.reports.pricesLink}</span>
+              <span className="text-xs leading-relaxed text-muted">{t.reports.pricesLinkHint}</span>
+            </div>
+          </div>
+          <Chevron size={18} className="shrink-0 text-faint" aria-hidden />
+        </AppLink>
+      </section>
 
       {/* Latest Month Selector Strip */}
       <section className="flex flex-col gap-2.5">

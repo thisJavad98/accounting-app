@@ -1,6 +1,6 @@
 "use client";
 
-import { formatNumber } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { useStore } from "./store";
 
 export function Money({
@@ -19,7 +19,7 @@ export function Money({
     <span className={`inline-flex items-baseline gap-1 tabular-nums ${className}`}>
       <bdi>
         {sign === "+" ? "+" : sign === "-" ? "\u2212" : ""}
-        {formatNumber(value, settings.locale)}
+        {formatMoney(value, settings.locale, settings.currency)}
       </bdi>
       <span className={unitClassName}>{t.currencies[settings.currency]}</span>
     </span>

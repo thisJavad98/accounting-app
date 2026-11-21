@@ -1,9 +1,11 @@
 // Network-first for pages, cache-first for static assets. Data lives in cookies, not here.
-const CACHE = "dakhl-v4";
+const CACHE = "dakhl-v5";
 const SHELL = [
   "/app",
   "/app/month",
   "/app/reports",
+  "/app/reports/savings",
+  "/app/reports/prices",
   "/app/settings",
   "/app/settings/categories",
   "/app/settings/sms-ios",

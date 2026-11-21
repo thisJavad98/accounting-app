@@ -18,6 +18,8 @@ import {
 import { formatNumber } from "@/lib/format";
 import { navigateWithRouter } from "@/lib/offline";
 import { BankInventoryCard } from "./bank-inventory-card";
+import { DailyPortfolioCard } from "./daily-portfolio-card";
+import { LiveMarketTicker } from "./live-market-ticker";
 import { LogoMark } from "./logo";
 import { Money } from "./money";
 import { useStore } from "./store";
@@ -119,7 +121,9 @@ export function DayView() {
   }
 
   return (
-    <div className="flex flex-col gap-7 px-5 pt-[max(env(safe-area-inset-top),1.5rem)]">
+    <div className="flex flex-col">
+      <LiveMarketTicker />
+      <div className="flex flex-col gap-7 px-5 pt-5">
       <header className="flex items-center justify-between">
         <span className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-brand cursor-pointer" onClick={() => navigateWithRouter(router, "/")}>
           <LogoMark size={28} className="rounded-lg" />
@@ -270,6 +274,8 @@ export function DayView() {
 
             <BankInventoryCard />
 
+            <DailyPortfolioCard />
+
             {dayTxs.length > 0 ? (
               <ul className="-mt-2 flex flex-col">
                 {dayTxs.map((tx) => (
@@ -301,6 +307,7 @@ export function DayView() {
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
       </div>
     </div>
   );

@@ -1,18 +1,42 @@
 "use client";
 
-import { CalendarDots, ChartDonut, GearSix, PiggyBank, Plus, type Icon } from "@phosphor-icons/react";
+import { CalendarDots, GearSix, PiggyBank, Plus, Vault, type Icon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { AppLink } from "./app-link";
 import { PoweredByCredit } from "./powered-by-footer";
 import { useStore } from "./store";
 
+type NavHref = "/app" | "/app/reports/savings" | "/app/reports" | "/app/settings";
+
+function isNavActive(pathname: string, href: NavHref): boolean {
+  if (href === "/app") return pathname === "/app";
+  if (href === "/app/reports/savings") {
+    return (
+      pathname === "/app/reports/savings" ||
+      pathname.startsWith("/app/reports/savings/") ||
+      pathname === "/app/reports/prices" ||
+      pathname.startsWith("/app/reports/prices/")
+    );
+  }
+  if (href === "/app/reports") {
+    if (
+      pathname.startsWith("/app/reports/savings") ||
+      pathname.startsWith("/app/reports/prices")
+    ) {
+      return false;
+    }
+    return pathname === "/app/reports" || pathname.startsWith("/app/reports/");
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function BottomNav() {
   const { t, openSheet } = useStore();
   const pathname = usePathname();
 
-  const items: { href: "/app" | "/app/month" | "/app/reports" | "/app/settings"; label: string; icon: Icon }[] = [
+  const items: { href: NavHref; label: string; icon: Icon }[] = [
     { href: "/app", label: t.nav.day, icon: CalendarDots },
-    { href: "/app/month", label: t.nav.month, icon: ChartDonut },
+    { href: "/app/reports/savings", label: t.nav.portfolio, icon: Vault },
     { href: "/app/reports", label: t.nav.reports, icon: PiggyBank },
     { href: "/app/settings", label: t.nav.settings, icon: GearSix },
   ];
@@ -33,7 +57,7 @@ export function BottomNav() {
         <nav aria-label={t.appName}>
           <ul className="grid grid-cols-4">
             {items.map(({ href, label, icon: Glyph }) => {
-              const active = pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
+              const active = isNavActive(pathname, href);
               return (
                 <li key={href}>
                   <AppLink
