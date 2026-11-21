@@ -4,11 +4,18 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   ChartDonut,
+  ChartLineUp,
   ChatText,
+  Coins,
+  CurrencyDollar,
   NotePencil,
   PiggyBank,
   Prohibit,
   Trash,
+  TrendDown,
+  TrendUp,
+  Vault,
+  Wallet,
 } from "@phosphor-icons/react";
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
@@ -283,6 +290,173 @@ export function SavingsShowcase({ copy, locale }: { copy: LandingCopy; locale: L
               {c.deleteAction}
             </button>
           )}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+export function PortfolioShowcase({ copy, locale }: { copy: LandingCopy; locale: Locale }) {
+  const p = copy.portfolio;
+  const reduce = useReducedMotion();
+  const totalValue = p.items.reduce((sum, item) => sum + item.value, 0);
+  const totalCost = p.items.reduce((sum, item) => sum + item.cost, 0);
+  const totalProfit = totalValue - totalCost;
+  const profitPct = Math.round((totalProfit / totalCost) * 1000) / 10;
+  const tickerLoop = [...p.ticker, ...p.ticker];
+
+  const kindIcon = {
+    gold: Coins,
+    usd: CurrencyDollar,
+    cash: Wallet,
+  } as const;
+
+  return (
+    <section className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+          className="order-2 flex flex-col overflow-hidden rounded-[2rem] border border-line bg-sunken shadow-[0_32px_70px_-35px_rgb(var(--shadow)/0.4)] lg:order-1"
+        >
+          <div className="border-b border-line bg-bg/90 px-4 pt-4 pb-2">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="rounded-md bg-brand-soft px-2 py-0.5 text-[10px] font-black tracking-wide text-brand-ink">
+                {p.tickerBadge}
+              </span>
+              <span className="text-[11px] font-medium text-faint">{p.tickerTitle}</span>
+            </div>
+            <div className="relative overflow-hidden" dir="ltr">
+              <div className="live-ticker-track flex w-max items-stretch">
+                {tickerLoop.map((row, index) => (
+                  <div
+                    key={`${row.label}-${index}`}
+                    className="inline-flex shrink-0 items-center gap-2.5 border-e border-line/80 px-4 py-2.5"
+                  >
+                    <span className="whitespace-nowrap text-[11px] font-bold text-muted">{row.label}</span>
+                    <span className="text-sm font-black tabular-nums tracking-tight">{row.value}</span>
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums ${
+                        row.up ? "text-success" : "text-danger"
+                      }`}
+                    >
+                      {row.up ? (
+                        <TrendUp size={12} weight="bold" aria-hidden />
+                      ) : (
+                        <TrendDown size={12} weight="bold" aria-hidden />
+                      )}
+                      {row.up ? "+" : "−"}
+                      {row.change}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 p-5 md:p-7">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-brand text-on-brand">
+                  <Vault size={22} weight="duotone" aria-hidden />
+                </span>
+                <span className="text-lg font-black tracking-tight">{p.holdingsTitle}</span>
+              </div>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold tabular-nums ${
+                  totalProfit >= 0 ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
+                }`}
+              >
+                {totalProfit >= 0 ? (
+                  <TrendUp size={14} weight="bold" aria-hidden />
+                ) : (
+                  <TrendDown size={14} weight="bold" aria-hidden />
+                )}
+                {totalProfit >= 0 ? "+" : "−"}
+                {formatNumber(Math.abs(profitPct), locale)}٪
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-1 rounded-2xl bg-surface p-4">
+              <span className="text-xs font-semibold text-muted">{p.valueToday}</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-black tracking-tight tabular-nums md:text-4xl">
+                  {formatNumber(totalValue, locale)}
+                </span>
+                <span className="text-sm font-semibold text-muted">{p.unit}</span>
+              </div>
+              <p
+                className={`text-xs font-semibold tabular-nums ${
+                  totalProfit >= 0 ? "text-success" : "text-danger"
+                }`}
+              >
+                {p.profitLoss}: {totalProfit >= 0 ? "+" : "−"}
+                {formatNumber(Math.abs(totalProfit), locale)} {p.unit}
+              </p>
+            </div>
+
+            <ul className="flex flex-col gap-2.5">
+              {p.items.map((item) => {
+                const Icon = kindIcon[item.kind];
+                const profit = item.value - item.cost;
+                return (
+                  <li
+                    key={item.title}
+                    className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-3.5 py-3"
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+                        <Icon size={18} weight="duotone" aria-hidden />
+                      </span>
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate font-bold">{item.title}</span>
+                        <span className="truncate text-xs text-muted">{item.detail}</span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-0.5">
+                      <span className="text-sm font-black tabular-nums">
+                        {formatNumber(item.value, locale)}
+                      </span>
+                      <span
+                        className={`text-[11px] font-bold tabular-nums ${
+                          profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted"
+                        }`}
+                      >
+                        {profit > 0 ? "+" : profit < 0 ? "−" : ""}
+                        {formatNumber(Math.abs(profit), locale)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          className="order-1 flex flex-col items-start gap-6 lg:order-2"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-1.5 text-xs font-bold text-brand-ink">
+            <ChartLineUp size={16} weight="fill" aria-hidden />
+            {p.eyebrow}
+          </span>
+          <h2 className="text-3xl leading-[1.2] font-black tracking-tight text-balance md:text-5xl">
+            {p.title}
+          </h2>
+          <p className="max-w-[48ch] text-base leading-relaxed text-muted md:text-lg">{p.body}</p>
+          <MagneticLink
+            href="/app/reports/savings"
+            className="inline-flex h-13 items-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-on-brand shadow-[0_14px_30px_-14px_rgb(200_68_15/0.75)]"
+          >
+            {p.cta}
+            <ArrowUpRight size={18} weight="bold" className="rtl:-scale-x-100" aria-hidden />
+          </MagneticLink>
         </motion.div>
       </div>
     </section>

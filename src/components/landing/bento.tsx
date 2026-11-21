@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsHorizontal } from "@phosphor-icons/react";
+import { ArrowsHorizontal, Coins, CurrencyDollar, Wallet } from "@phosphor-icons/react";
 import {
   animate,
   AnimatePresence,
@@ -184,7 +184,28 @@ export function Bento({ copy, locale }: { copy: LandingCopy; locale: Locale }) {
 
         <motion.article
           {...reveal(reduce, 0.05)}
-          className="flex flex-col justify-between gap-6 rounded-[1.75rem] border border-line bg-surface p-7 md:col-span-2"
+          className="flex flex-col justify-between gap-5 rounded-[1.75rem] border border-line bg-surface p-7 md:col-span-2"
+        >
+          <div className="flex items-center gap-2">
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+              <Wallet size={18} weight="duotone" aria-hidden />
+            </span>
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+              <Coins size={18} weight="duotone" aria-hidden />
+            </span>
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+              <CurrencyDollar size={18} weight="duotone" aria-hidden />
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-lg font-bold">{b.portfolio.title}</h3>
+            <p className="text-sm leading-relaxed text-muted">{b.portfolio.body}</p>
+          </div>
+        </motion.article>
+
+        <motion.article
+          {...reveal(reduce, 0.08)}
+          className="flex flex-col justify-between gap-6 rounded-[1.75rem] bg-sunken p-7 md:col-span-2"
         >
           <p className="text-6xl font-black tracking-tighter text-brand tabular-nums md:text-7xl">
             <CountUp to={100} locale={locale} suffix={b.privacy.suffix} />
