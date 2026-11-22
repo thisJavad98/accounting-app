@@ -6,7 +6,6 @@ import {
   CaretLeft,
   CaretRight,
   ChartDonut,
-  ChartLineUp,
   PiggyBank,
   Prohibit,
   Sparkle,
@@ -145,21 +144,6 @@ export function ReportsView() {
             <div className="flex min-w-0 flex-col gap-0.5">
               <span className="font-bold">{t.reports.monthLink}</span>
               <span className="text-xs leading-relaxed text-muted">{t.reports.monthLinkHint}</span>
-            </div>
-          </div>
-          <Chevron size={18} className="shrink-0 text-faint" aria-hidden />
-        </AppLink>
-        <AppLink
-          href="/app/reports/prices"
-          className="flex items-center justify-between gap-3 rounded-2xl bg-sunken p-4 transition-transform active:scale-[0.99]"
-        >
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-ink">
-              <ChartLineUp size={22} weight="duotone" aria-hidden />
-            </span>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="font-bold">{t.reports.pricesLink}</span>
-              <span className="text-xs leading-relaxed text-muted">{t.reports.pricesLinkHint}</span>
             </div>
           </div>
           <Chevron size={18} className="shrink-0 text-faint" aria-hidden />

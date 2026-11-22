@@ -24,7 +24,8 @@ const fa = {
     needsTitleAction: "ثبت عنوان",
     monthReviewPrompt: (month: string) =>
       `گزارش ${month} آماده است؛ خریدهای غیرضروری را حذف کنید و پس‌انداز کنید`,
-    monthEndPrompt: "آخر ماه نزدیک است؛ خریدهای غیرضروری را خط بزنید تا حقوق بیشتری پس‌انداز شود",
+    monthEndPrompt:
+      "آخر ماه نزدیک است؛ خریدهای غیرضروری را خط بزنید تا حقوق بیشتری پس‌انداز شود",
     monthReviewAction: "گزارش و پس‌انداز",
     untitled: "بدون عنوان",
     prevDay: "روز قبل",
@@ -40,18 +41,21 @@ const fa = {
   },
   inventory: {
     title: "موجودی حساب‌های بانکی شما...(از پیامک)",
-    subtitle: "در صورت تکرار پیامک یک بانک، فقط آخرین موجودی آن بانک نمایش و جمع زده می‌شود",
+    subtitle:
+      "در صورت تکرار پیامک یک بانک، فقط آخرین موجودی آن بانک نمایش و جمع زده می‌شود",
     totalLabel: "جمع آخرین موجودی بانک‌ها",
     banksCount: (n: string) => `${n} بانک`,
     lastInventoryBadge: "آخرین موجودی",
     addSmsAction: "ثبت پیامک موجودی",
     closeSmsAction: "بستن",
-    smsPlaceholder: "یک یا چند پیامک بانکی را اینجا بچسبانید...\nاگر چند پیامک از یک بانک باشد، آخرین موجودی ذخیره می‌شود.",
+    smsPlaceholder:
+      "یک یا چند پیامک بانکی را اینجا بچسبانید...\nاگر چند پیامک از یک بانک باشد، آخرین موجودی ذخیره می‌شود.",
     pasteClipboard: "چسباندن",
     saveInventory: "ذخیره موجودی بانک‌ها",
     previewLabel: (n: string) => `موجودی شناسایی‌شده (${n} بانک)`,
     duplicateUpdated: "بانک تکراری نادیده گرفته شد؛ آخرین موجودی لحاظر شد",
-    emptyHint: "هنوز پیامکی با موجودی ثبت نشده. پیامک‌های بانک را بچسبانید تا آخرین موجودی هر بانک ذخیره و جمع شود.",
+    emptyHint:
+      "هنوز پیامکی با موجودی ثبت نشده. پیامک‌های بانک را بچسبانید تا آخرین موجودی هر بانک ذخیره و جمع شود.",
     noBalanceFound: "در این متن موجودی بانکی (مانده / موجودی) پیدا نشد.",
     savedToast: (n: string) => `موجودی ${n} بانک ذخیره شد`,
     unknownBank: "حساب بانکی",
@@ -63,7 +67,8 @@ const fa = {
     daily: "خرج روزانه",
     byCategory: "بر اساس دسته",
     bought: "چه چیزهایی خریدید",
-    boughtHint: "خریدهای غیرضروری را علامت بزنید یا حذف کنید تا ببینید چقدر از حقوق و دریافتی ماه قابل پس‌انداز است.",
+    boughtHint:
+      "خریدهای غیرضروری را علامت بزنید یا حذف کنید تا ببینید چقدر از حقوق و دریافتی ماه قابل پس‌انداز است.",
     allEntries: "همه موارد",
     groupByTitle: "بر اساس عنوان",
     onlyUnnecessary: "فقط غیرضروری‌ها",
@@ -75,26 +80,31 @@ const fa = {
     openDay: "نمایش این روز",
     avgDay: "میانگین روزانه",
     savingsTitle: "بهینه‌سازی حقوق و پس‌انداز ماهانه",
-    savingsSubtitle: "با حذف خریدهای غیرضروری، ببینید چقدر پول برایتان می‌ماند.",
+    savingsSubtitle:
+      "با حذف خریدهای غیرضروری، ببینید چقدر پول برایتان می‌ماند.",
     canSave: "پولی که می‌توانید پس‌انداز کنید",
     savedFromCuts: "پس‌انداز از حذف خریدهای غیرضروری",
     savingsRate: (pct: string) => `${pct}٪ از دریافتی ماه`,
     incomingTitle: "دریافتی و حقوق این ماه",
     addIncome: "ثبت حقوق یا دریافتی",
-    noIncomeHint: "حقوق یا دریافتی این ماه را ثبت کنید تا پس‌انداز دقیق شما از درآمد محاسبه شود.",
+    noIncomeHint:
+      "حقوق یا دریافتی این ماه را ثبت کنید تا پس‌انداز دقیق شما از درآمد محاسبه شود.",
     necessaryBuys: "خریدهای ضروری",
     unnecessaryBuys: "خریدهای غیرضروری",
     markUnnecessary: "غیرضروری",
     unmarkUnnecessary: "ضروری بود",
     deleteUnnecessary: (n: string) => `حذف دائمی ${n} خرید غیرضروری`,
-    confirmDeleteUnnecessary: (n: string) => `هر ${n} خرید غیرضروری برای همیشه حذف شود؟`,
+    confirmDeleteUnnecessary: (n: string) =>
+      `هر ${n} خرید غیرضروری برای همیشه حذف شود؟`,
     unnecessaryDeleted: (n: string) => `${n} خرید غیرضروری حذف شد`,
-    noUnnecessaryYet: "هنوز خریدی را غیرضروری علامت نزده‌اید. از فهرست پایین، خریدهای اضافه را مشخص کنید.",
+    noUnnecessaryYet:
+      "هنوز خریدی را غیرضروری علامت نزده‌اید. از فهرست پایین، خریدهای اضافه را مشخص کنید.",
     openFullReport: "مشاهده گزارش کامل و پس‌انداز",
   },
   reports: {
     title: "گزارش‌های ماهانه",
-    subtitle: "ورودی پول، خریدها و مبلغ قابل پس‌انداز هر ماه را بررسی کنید و خریدهای غیرضروری را حذف کنید.",
+    subtitle:
+      "ورودی پول، خریدها و مبلغ قابل پس‌انداز هر ماه را بررسی کنید و خریدهای غیرضروری را حذف کنید.",
     latestMonths: "ماه‌های اخیر",
     latestBadge: "آخرین ماه",
     currentBadge: "ماه جاری",
@@ -114,19 +124,25 @@ const fa = {
     addIncome: "ثبت حقوق یا ورودی",
     addExpense: "ثبت خرید",
     buysListTitle: "فهرست خریدهای شما",
-    buysListSubtitle: "خریدهای غیرضروری را علامت بزنید یا برای همیشه حذف کنید تا مبلغ پس‌اندازتان مشخص شود.",
+    buysListSubtitle:
+      "خریدهای غیرضروری را علامت بزنید یا برای همیشه حذف کنید تا مبلغ پس‌اندازتان مشخص شود.",
     allBuys: "همه خریدها",
     byTitle: "بر اساس عنوان",
     unnecessaryOnly: "فقط غیرضروری‌ها",
     markUnnecessary: "غیرضروری",
     keepNecessary: "ضروری",
     deleteOne: "حذف این خرید",
-    deleteAllUnnecessary: (n: string) => `حذف دائمی ${n} خرید غیرضروری و تثبیت پس‌انداز`,
-    confirmDeleteAll: (n: string) => `مطمئنید هر ${n} خرید غیرضروری برای همیشه حذف شود؟`,
-    deletedToast: (n: string) => `${n} خرید غیرضروری حذف شد و پس‌انداز شما به‌روز شد`,
+    deleteAllUnnecessary: (n: string) =>
+      `حذف دائمی ${n} خرید غیرضروری و تثبیت پس‌انداز`,
+    confirmDeleteAll: (n: string) =>
+      `مطمئنید هر ${n} خرید غیرضروری برای همیشه حذف شود؟`,
+    deletedToast: (n: string) =>
+      `${n} خرید غیرضروری حذف شد و پس‌انداز شما به‌روز شد`,
     emptyMonthTitle: "در این ماه تراکنشی ثبت نشده است",
-    emptyMonthBody: "حقوق ورودی یا خریدهای این ماه را ثبت کنید تا گزارش پس‌انداز ساخته شود.",
-    summaryCount: (incomeCount: string, buyCount: string) => `${incomeCount} ورودی · ${buyCount} خرید`,
+    emptyMonthBody:
+      "حقوق ورودی یا خریدهای این ماه را ثبت کنید تا گزارش پس‌انداز ساخته شود.",
+    summaryCount: (incomeCount: string, buyCount: string) =>
+      `${incomeCount} ورودی · ${buyCount} خرید`,
     unnecessaryCount: (n: string) => `${n} خرید غیرضروری`,
     monthLink: "ماهانه",
     monthLinkHint: "جمع خرج، دریافتی و پس‌انداز قابل‌حذف این ماه",
@@ -135,7 +151,8 @@ const fa = {
   },
   portfolio: {
     title: "پس‌انداز",
-    subtitle: "نقد، طلا، دلار یا تتر ذخیره کنید و سود و زیان را نسبت به قیمت امروز ببینید.",
+    subtitle:
+      "نقد، طلا، دلار یا تتر ذخیره کنید و سود و زیان را نسبت به قیمت امروز ببینید.",
     back: "بازگشت",
     openPrices: "قیمت روز طلا، دلار و تتر",
     kinds: { cash: "نقد", gold: "طلا", usd: "دلار", usdt: "تتر" },
@@ -153,11 +170,13 @@ const fa = {
     goldModeGrams: "با گرم / سوت",
     goldModeAmount: "با مبلغ ریالی",
     goldGrams: "مقدار طلا (گرم)",
-    goldGramsHint: "با وارد کردن سوت خودکار تا ۳ رقم اعشار پر می‌شود (۱۰۰۰ سوت = ۱٫۰۰۰ گرم)",
+    goldGramsHint:
+      "با وارد کردن سوت خودکار تا ۳ رقم اعشار پر می‌شود (۱۰۰۰ سوت = ۱٫۰۰۰ گرم)",
     goldSoot: "مقدار سوت",
     goldSootHint: "۱۰۰۰ سوت = ۱ گرم طلای ۱۸ عیار (همان قیمت سایت)",
     goldBuyPerGram: "قیمت خرید هر گرم",
-    goldBuyPerGramHint: "با وارد کردن سوت/گرم از قیمت سایت پر می‌شود؛ اگر خودتان عدد بگذارید، همان مبنا ذخیره می‌شود.",
+    goldBuyPerGramHint:
+      "با وارد کردن سوت/گرم از قیمت سایت پر می‌شود؛ اگر خودتان عدد بگذارید، همان مبنا ذخیره می‌شود.",
     goldAmount: "مبلغ طلا",
     goldAmountHint: "با قیمت لحظه‌ای (یا نرخ واردشده) به گرم تبدیل می‌شود.",
     initial: "مبلغ اولیه",
@@ -168,8 +187,10 @@ const fa = {
     totalValue: "ارزش کل پس‌انداز",
     totalProfit: "سود / زیان کل",
     emptyTitle: "هنوز پس‌اندازی ثبت نشده",
-    emptyBody: "نقد، طلا، دلار یا تتر اضافه کنید تا ارزش و سود/زیان امروز را ببینید.",
-    pricesUnavailable: "قیمت لحظه‌ای در دسترس نیست. داده‌های ذخیره‌شده محفوظ است.",
+    emptyBody:
+      "نقد، طلا، دلار یا تتر اضافه کنید تا ارزش و سود/زیان امروز را ببینید.",
+    pricesUnavailable:
+      "قیمت لحظه‌ای در دسترس نیست. داده‌های ذخیره‌شده محفوظ است.",
     pricesLoading: "در حال دریافت قیمت…",
     gramsLabel: (n: string) => `${n} گرم`,
     usdLabel: (n: string) => `${n} دلار`,
@@ -181,7 +202,7 @@ const fa = {
     invalidAmount: "مبلغ یا مقدار معتبر وارد کنید.",
     fullToast: "فضای ذخیره‌سازی پس‌انداز پر است.",
     dayCardTitle: "پس‌انداز شما",
-    dayCardEmpty: "پس‌اندازی ثبت نشده — از گزارش‌ها اضافه کنید",
+    dayCardEmpty: "پس‌اندازی ثبت نشده",
     dayCardAction: "مشاهده",
     source: "منبع قیمت: TGJU",
   },
@@ -229,9 +250,11 @@ const fa = {
     read: "خواندن پیامک",
     notFound: "مبلغی در این متن پیدا نشد. متن کامل پیامک را بچسبانید.",
     clipboardDenied: "دسترسی به کلیپ‌بورد داده نشد. متن را دستی بچسبانید.",
-    clipboardNotSms: "در کلیپ‌بورد پیامک بانکی نبود. متن پیامک را اینجا بچسبانید.",
+    clipboardNotSms:
+      "در کلیپ‌بورد پیامک بانکی نبود. متن پیامک را اینجا بچسبانید.",
     offerTitle: "پیامک بانک رسیده؟",
-    offerBody: "میانبر، متن پیامک را روی کلیپ‌بورد گذاشته است. آن را بخوانید تا جزئیات تراکنش را ببینید.",
+    offerBody:
+      "میانبر، متن پیامک را روی کلیپ‌بورد گذاشته است. آن را بخوانید تا جزئیات تراکنش را ببینید.",
     offerRead: "خواندن پیامک",
     offerLater: "الان نه",
     placeholder: "برداشت: ۱,۲۵۰,۰۰۰\nمانده: ۳,۴۰۰,۰۰۰",
@@ -269,7 +292,8 @@ const fa = {
     unnecessary: "خرید غیرضروری (برای محاسبه پس‌انداز آخر ماه)",
     kind: "نوع تراکنش",
     transfer: "انتقال",
-    transferHint: "جابه‌جایی پول بین حساب‌های خودتان جزو خرج یا درآمد حساب نمی‌شود.",
+    transferHint:
+      "جابه‌جایی پول بین حساب‌های خودتان جزو خرج یا درآمد حساب نمی‌شود.",
     fromAccount: "برداشت از حساب",
     toAccount: "واریز به حساب",
     accountPlaceholder: "مثلا: ملت، کارت سامان",
@@ -285,28 +309,49 @@ const fa = {
     theme: "ظاهر",
     themes: { system: "خودکار", light: "روشن", dark: "تیره" },
     exportCsv: "دریافت فایل CSV برای اکسل",
-    csvHeaders: ["تاریخ", "ساعت", "نوع", "مبلغ", "واحد", "عنوان", "توضیح", "دسته", "بانک", "موجودی"],
+    csvHeaders: [
+      "تاریخ",
+      "ساعت",
+      "نوع",
+      "مبلغ",
+      "واحد",
+      "عنوان",
+      "توضیح",
+      "دسته",
+      "بانک",
+      "موجودی",
+    ],
     currency: "واحد پول",
-    currencyHelper: "مبالغ قبلی تبدیل نمی‌شوند. پیامک‌های ریالی هنگام انتخاب تومان خودکار تبدیل می‌شوند.",
+    currencyHelper:
+      "مبالغ قبلی تبدیل نمی‌شوند. پیامک‌های ریالی هنگام انتخاب تومان خودکار تبدیل می‌شوند.",
     smsTitle: "اتصال پیامک بانک",
-    smsAndroid: "اندروید: برنامه را از منوی مرورگر «نصب» کنید. سپس روی پیامک بانک نگه دارید، «اشتراک‌گذاری» را بزنید و دخل را انتخاب کنید.",
-    smsIos: "آیفون: با برنامه Shortcuts کاری کنید که هر پیامک بانک خودکار دخل را باز کند.",
+    smsAndroid:
+      "اندروید: برنامه را از منوی مرورگر «نصب» کنید. سپس روی پیامک بانک نگه دارید، «اشتراک‌گذاری» را بزنید و دخل را انتخاب کنید.",
+    smsIos:
+      "آیفون: با برنامه Shortcuts کاری کنید که هر پیامک بانک خودکار دخل را باز کند.",
     smsIosGuide: "راهنمای تصویری آیفون",
     smsIosGuideHint: "مخصوص iOS 27، حدود دو دقیقه",
-    smsAuto: "مبلغ، نوع، بانک، موجودی، تاریخ و ساعت شمسی، شماره حساب و یک عنوان پیشنهادی خودکار از متن پیامک خوانده می‌شود.",
+    smsAuto:
+      "مبلغ، نوع، بانک، موجودی، تاریخ و ساعت شمسی، شماره حساب و یک عنوان پیشنهادی خودکار از متن پیامک خوانده می‌شود.",
     install: "نصب برنامه",
-    installBody: "دخل را روی صفحه اصلی گوشی نصب کنید تا مثل یک برنامه باز شود، بدون اینترنت هم کار کند و پیامک بانک را مستقیم به آن بفرستید.",
+    installBody:
+      "دخل را روی صفحه اصلی گوشی نصب کنید تا مثل یک برنامه باز شود، بدون اینترنت هم کار کند و پیامک بانک را مستقیم به آن بفرستید.",
     installButton: "نصب دخل",
     installed: "دخل روی این دستگاه نصب شده است.",
-    installIos: "در سافاری دکمه «اشتراک‌گذاری» را بزنید و «افزودن به صفحه اصلی» را انتخاب کنید.",
-    installOther: "از منوی مرورگر گزینه «نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید.",
-    offlineReady: "آمادهٔ کار آفلاین: یک‌بار آنلاین باز کرده‌اید و صفحات برنامه ذخیره شده‌اند.",
-    offlineNotReady: "برای فعال شدن حالت آفلاین، یک‌بار با اینترنت برنامه را باز کنید.",
+    installIos:
+      "در سافاری دکمه «اشتراک‌گذاری» را بزنید و «افزودن به صفحه اصلی» را انتخاب کنید.",
+    installOther:
+      "از منوی مرورگر گزینه «نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید.",
+    offlineReady:
+      "آمادهٔ کار آفلاین: یک‌بار آنلاین باز کرده‌اید و صفحات برنامه ذخیره شده‌اند.",
+    offlineNotReady:
+      "برای فعال شدن حالت آفلاین، یک‌بار با اینترنت برنامه را باز کنید.",
     offlineNow: "الان آفلاین هستید.",
     copy: "کپی",
     copied: "کپی شد",
     storage: "ذخیره‌سازی",
-    storageBody: "همه اطلاعات فقط در کوکی‌های همین مرورگر ذخیره می‌شود. هیچ سروری در کار نیست.",
+    storageBody:
+      "همه اطلاعات فقط در کوکی‌های همین مرورگر ذخیره می‌شود. هیچ سروری در کار نیست.",
     used: (used: string, total: string) => `${used} از ${total} کیلوبایت`,
     entries: (n: string) => `${n} تراکنش`,
     export: "دریافت نسخه پشتیبان",
@@ -316,7 +361,8 @@ const fa = {
     clear: "پاک کردن همه اطلاعات",
     clearConfirm: "همه تراکنش‌ها برای همیشه پاک می‌شوند. مطمئنید؟",
     cleared: "همه اطلاعات پاک شد",
-    nearlyFull: "فضای کوکی رو به اتمام است. یک پشتیبان بگیرید و ماه‌های قدیمی را پاک کنید.",
+    nearlyFull:
+      "فضای کوکی رو به اتمام است. یک پشتیبان بگیرید و ماه‌های قدیمی را پاک کنید.",
     categoriesTitle: "دسته‌ها",
     categoriesLink: "سفارشی‌سازی دسته‌ها",
     categoriesLinkHint: "دستهٔ جدید بسازید یا پرکاربردها را ستاره بزنید",
@@ -324,9 +370,11 @@ const fa = {
   categorySettings: {
     title: "دسته‌های شما",
     back: "تنظیمات",
-    intro: "دستهٔ جدید بسازید و دسته‌های پرکاربرد را ستاره بزنید تا اول فهرست ثبت خرج و پیامک بیایند.",
+    intro:
+      "دستهٔ جدید بسازید و دسته‌های پرکاربرد را ستاره بزنید تا اول فهرست ثبت خرج و پیامک بیایند.",
     favorites: "دسته‌های پرکاربرد",
-    favoritesEmpty: "هنوز دسته‌ای را ستاره نزده‌اید. از فهرست پایین انتخاب کنید.",
+    favoritesEmpty:
+      "هنوز دسته‌ای را ستاره نزده‌اید. از فهرست پایین انتخاب کنید.",
     all: "همه دسته‌ها",
     popular: "پیشنهاد بر اساس خرج‌های شما",
     popularHint: "بیشترین دسته‌هایی که تا حالا ثبت کرده‌اید.",
@@ -413,13 +461,15 @@ const fa = {
     reject: "رد کردن",
     rejected: "پیامک رد شد و ثبت نشد",
     duplicate: "این پیامک قبلا ثبت شده است",
-    notToday: (day: string) => `این پیامک برای امروز نیست. با تأیید، در ${day} ثبت می‌شود.`,
+    notToday: (day: string) =>
+      `این پیامک برای امروز نیست. با تأیید، در ${day} ثبت می‌شود.`,
   },
   toast: {
     saved: "ذخیره شد",
     deleted: "حذف شد",
     full: "فضای کوکی پر شده است. از تنظیمات پشتیبان بگیرید و موارد قدیمی را پاک کنید.",
-    portfolioNew: "بخش پس‌انداز اضافه شد — نقد، طلا، دلار و تتر با قیمت زنده. بزنید تا ببینید.",
+    portfolioNew:
+      "بخش پس‌انداز اضافه شد — نقد، طلا، دلار و تتر با قیمت زنده. بزنید تا ببینید.",
   },
   categories: {
     food: "رستوران و کافه",
@@ -471,7 +521,8 @@ const en: Dictionary = {
     needsTitleAction: "Add title",
     monthReviewPrompt: (month) =>
       `${month} report is ready — cut unnecessary buys to save more of your salary`,
-    monthEndPrompt: "Month end is here — trim unnecessary buys to boost your savings",
+    monthEndPrompt:
+      "Month end is here — trim unnecessary buys to boost your savings",
     monthReviewAction: "Review & save",
     untitled: "Untitled",
     prevDay: "Previous day",
@@ -487,18 +538,21 @@ const en: Dictionary = {
   },
   inventory: {
     title: "Bank inventory (from SMS)",
-    subtitle: "If a bank appears multiple times, only its last inventory is shown and summed",
+    subtitle:
+      "If a bank appears multiple times, only its last inventory is shown and summed",
     totalLabel: "Total latest bank inventory",
     banksCount: (n) => `${n} banks`,
     lastInventoryBadge: "Last inventory",
     addSmsAction: "Add bank SMS",
     closeSmsAction: "Close",
-    smsPlaceholder: "Paste one or more bank SMS messages here...\nDuplicate banks keep only the latest inventory.",
+    smsPlaceholder:
+      "Paste one or more bank SMS messages here...\nDuplicate banks keep only the latest inventory.",
     pasteClipboard: "Paste",
     saveInventory: "Save bank inventory",
     previewLabel: (n) => `Detected inventory (${n} banks)`,
     duplicateUpdated: "Duplicate bank detected — keeping last inventory",
-    emptyHint: "No bank SMS inventory saved yet. Paste your bank SMS messages to save and sum the latest inventory per bank.",
+    emptyHint:
+      "No bank SMS inventory saved yet. Paste your bank SMS messages to save and sum the latest inventory per bank.",
     noBalanceFound: "No bank balance/inventory found in this SMS text.",
     savedToast: (n) => `Saved inventory for ${n} banks`,
     unknownBank: "Bank account",
@@ -510,7 +564,8 @@ const en: Dictionary = {
     daily: "Daily spending",
     byCategory: "By category",
     bought: "What you paid for",
-    boughtHint: "Mark unnecessary buys or delete them to see how much of your monthly income you can save.",
+    boughtHint:
+      "Mark unnecessary buys or delete them to see how much of your monthly income you can save.",
     allEntries: "All entries",
     groupByTitle: "By title",
     onlyUnnecessary: "Unnecessary only",
@@ -522,26 +577,31 @@ const en: Dictionary = {
     openDay: "Open this day",
     avgDay: "Daily average",
     savingsTitle: "Salary & monthly savings planner",
-    savingsSubtitle: "Cut unnecessary buys to see how much money you can keep and save.",
+    savingsSubtitle:
+      "Cut unnecessary buys to see how much money you can keep and save.",
     canSave: "Money you can save",
     savedFromCuts: "Saved by cutting unnecessary buys",
     savingsRate: (pct) => `${pct}% of monthly income`,
     incomingTitle: "Incoming money & salary",
     addIncome: "Add salary or income",
-    noIncomeHint: "Add your monthly salary or income to see your total savings potential.",
+    noIncomeHint:
+      "Add your monthly salary or income to see your total savings potential.",
     necessaryBuys: "Necessary buys",
     unnecessaryBuys: "Unnecessary buys",
     markUnnecessary: "Unnecessary",
     unmarkUnnecessary: "Keep",
     deleteUnnecessary: (n) => `Delete ${n} unnecessary buys`,
-    confirmDeleteUnnecessary: (n) => `Permanently delete ${n} unnecessary buys?`,
+    confirmDeleteUnnecessary: (n) =>
+      `Permanently delete ${n} unnecessary buys?`,
     unnecessaryDeleted: (n) => `${n} unnecessary buys deleted`,
-    noUnnecessaryYet: "No buys marked as unnecessary yet. Tap any non-essential buy below to see your savings grow.",
+    noUnnecessaryYet:
+      "No buys marked as unnecessary yet. Tap any non-essential buy below to see your savings grow.",
     openFullReport: "Open full savings report",
   },
   reports: {
     title: "Monthly reports",
-    subtitle: "Review incoming money, your buys, and how much you can save by cutting unnecessary purchases.",
+    subtitle:
+      "Review incoming money, your buys, and how much you can save by cutting unnecessary purchases.",
     latestMonths: "Latest months",
     latestBadge: "Latest",
     currentBadge: "This month",
@@ -561,7 +621,8 @@ const en: Dictionary = {
     addIncome: "Add salary / income",
     addExpense: "Add buy",
     buysListTitle: "Your buys this month",
-    buysListSubtitle: "Mark non-essential buys as unnecessary or delete them to lock in your monthly savings.",
+    buysListSubtitle:
+      "Mark non-essential buys as unnecessary or delete them to lock in your monthly savings.",
     allBuys: "All buys",
     byTitle: "By title",
     unnecessaryOnly: "Unnecessary only",
@@ -572,8 +633,10 @@ const en: Dictionary = {
     confirmDeleteAll: (n) => `Permanently delete ${n} unnecessary buys?`,
     deletedToast: (n) => `${n} unnecessary buys deleted`,
     emptyMonthTitle: "No entries for this month",
-    emptyMonthBody: "Add your incoming salary or buys to generate this month's savings report.",
-    summaryCount: (incomeCount, buyCount) => `${incomeCount} incoming · ${buyCount} buys`,
+    emptyMonthBody:
+      "Add your incoming salary or buys to generate this month's savings report.",
+    summaryCount: (incomeCount, buyCount) =>
+      `${incomeCount} incoming · ${buyCount} buys`,
     unnecessaryCount: (n) => `${n} unnecessary`,
     monthLink: "Monthly",
     monthLinkHint: "This month’s spending, income, and cuttable savings",
@@ -582,7 +645,8 @@ const en: Dictionary = {
   },
   portfolio: {
     title: "Savings",
-    subtitle: "Hold cash, gold, dollars, or Tether and see profit or loss against today’s price.",
+    subtitle:
+      "Hold cash, gold, dollars, or Tether and see profit or loss against today’s price.",
     back: "Back",
     openPrices: "Today’s gold, dollar & Tether prices",
     kinds: { cash: "Cash", gold: "Gold", usd: "USD", usdt: "Tether" },
@@ -604,7 +668,8 @@ const en: Dictionary = {
     goldSoot: "Soot amount",
     goldSootHint: "1000 soot = 1g of 18k gold (TGJU price)",
     goldBuyPerGram: "Buy price per gram",
-    goldBuyPerGramHint: "Auto-filled from the live site price; if you type a price, that becomes the saved basis.",
+    goldBuyPerGramHint:
+      "Auto-filled from the live site price; if you type a price, that becomes the saved basis.",
     goldAmount: "Gold cash amount",
     goldAmountHint: "Converted to grams using live (or entered) price.",
     initial: "Initial amount",
@@ -676,16 +741,19 @@ const en: Dictionary = {
     read: "Read SMS",
     notFound: "No amount found in this text. Paste the full SMS.",
     clipboardDenied: "Clipboard access was blocked. Paste the text by hand.",
-    clipboardNotSms: "The clipboard had no bank SMS in it. Paste the SMS text here.",
+    clipboardNotSms:
+      "The clipboard had no bank SMS in it. Paste the SMS text here.",
     offerTitle: "Got a bank SMS?",
-    offerBody: "The shortcut left the SMS text on your clipboard. Read it to see the transaction details.",
+    offerBody:
+      "The shortcut left the SMS text on your clipboard. Read it to see the transaction details.",
     offerRead: "Read the SMS",
     offerLater: "Not now",
     placeholder: "Debited: 1,250,000\nBalance: 3,400,000",
   },
   form: {
     newSms: "New bank SMS",
-    newSmsBody: "Note what this payment was for, so the month-end report makes sense.",
+    newSmsBody:
+      "Note what this payment was for, so the month-end report makes sense.",
     newTx: "Log a payment",
     editTx: "Edit entry",
     expense: "Expense",
@@ -716,7 +784,8 @@ const en: Dictionary = {
     unnecessary: "Unnecessary buy (count toward month-end savings)",
     kind: "Transaction type",
     transfer: "Transfer",
-    transferHint: "Moving money between your own accounts is not counted as spending or income.",
+    transferHint:
+      "Moving money between your own accounts is not counted as spending or income.",
     fromAccount: "From account",
     toAccount: "To account",
     accountPlaceholder: "e.g. Mellat, Saman card",
@@ -732,28 +801,47 @@ const en: Dictionary = {
     theme: "Appearance",
     themes: { system: "System", light: "Light", dark: "Dark" },
     exportCsv: "Download CSV for Excel",
-    csvHeaders: ["Date", "Time", "Type", "Amount", "Currency", "Title", "Note", "Category", "Bank", "Balance"],
+    csvHeaders: [
+      "Date",
+      "Time",
+      "Type",
+      "Amount",
+      "Currency",
+      "Title",
+      "Note",
+      "Category",
+      "Bank",
+      "Balance",
+    ],
     currency: "Currency",
-    currencyHelper: "Existing amounts are not converted. Rial SMS amounts convert automatically when Toman is selected.",
+    currencyHelper:
+      "Existing amounts are not converted. Rial SMS amounts convert automatically when Toman is selected.",
     smsTitle: "Connect bank SMS",
-    smsAndroid: "Android: install the app from the browser menu. Then long-press a bank SMS, tap Share and pick Dakhl.",
-    smsIos: "iPhone: use the Shortcuts app so every bank SMS opens Dakhl automatically.",
+    smsAndroid:
+      "Android: install the app from the browser menu. Then long-press a bank SMS, tap Share and pick Dakhl.",
+    smsIos:
+      "iPhone: use the Shortcuts app so every bank SMS opens Dakhl automatically.",
     smsIosGuide: "iPhone guide with pictures",
     smsIosGuideHint: "For iOS 27, about two minutes",
-    smsAuto: "Amount, direction, bank, balance, Persian or Gregorian date and time, account digits and a suggested title are read from the SMS automatically.",
+    smsAuto:
+      "Amount, direction, bank, balance, Persian or Gregorian date and time, account digits and a suggested title are read from the SMS automatically.",
     install: "Install the app",
-    installBody: "Add Dakhl to your home screen so it opens like an app, works offline and can receive bank SMS directly.",
+    installBody:
+      "Add Dakhl to your home screen so it opens like an app, works offline and can receive bank SMS directly.",
     installButton: "Install Dakhl",
     installed: "Dakhl is installed on this device.",
     installIos: "In Safari, tap Share, then choose Add to Home Screen.",
-    installOther: "Open the browser menu and choose Install app or Add to Home Screen.",
-    offlineReady: "Ready for offline: you opened the app online once and its pages are cached.",
+    installOther:
+      "Open the browser menu and choose Install app or Add to Home Screen.",
+    offlineReady:
+      "Ready for offline: you opened the app online once and its pages are cached.",
     offlineNotReady: "Open the app once online to enable offline use.",
     offlineNow: "You are offline now.",
     copy: "Copy",
     copied: "Copied",
     storage: "Storage",
-    storageBody: "Everything is stored only in this browser's cookies. There is no server.",
+    storageBody:
+      "Everything is stored only in this browser's cookies. There is no server.",
     used: (used, total) => `${used} of ${total} KB`,
     entries: (n) => `${n} transactions`,
     export: "Download backup",
@@ -763,7 +851,8 @@ const en: Dictionary = {
     clear: "Erase all data",
     clearConfirm: "All transactions will be erased for good. Are you sure?",
     cleared: "All data erased",
-    nearlyFull: "Cookie storage is almost full. Download a backup and remove old months.",
+    nearlyFull:
+      "Cookie storage is almost full. Download a backup and remove old months.",
     categoriesTitle: "Categories",
     categoriesLink: "Customize categories",
     categoriesLinkHint: "Create new ones or star your favorites",
@@ -771,7 +860,8 @@ const en: Dictionary = {
   categorySettings: {
     title: "Your categories",
     back: "Settings",
-    intro: "Create your own categories and star the ones you use most so they appear first when logging a payment.",
+    intro:
+      "Create your own categories and star the ones you use most so they appear first when logging a payment.",
     favorites: "Favorites",
     favoritesEmpty: "No favorites yet. Star categories from the list below.",
     all: "All categories",
@@ -819,7 +909,7 @@ const en: Dictionary = {
       },
       {
         title: "Match your bank's texts",
-        body: "In the When I receive a message trigger, change Sender to Message and type ریال (\"rial\"), which almost every Iranian bank SMS includes. Then tap the arrow beside the trigger and turn off Confirm Before Run.",
+        body: 'In the When I receive a message trigger, change Sender to Message and type ریال ("rial"), which almost every Iranian bank SMS includes. Then tap the arrow beside the trigger and turn off Confirm Before Run.',
       },
       {
         title: "Add Copy to Clipboard and URL Encode",
@@ -860,13 +950,15 @@ const en: Dictionary = {
     reject: "Reject",
     rejected: "SMS rejected, nothing was saved",
     duplicate: "This SMS is already saved",
-    notToday: (day: string) => `This SMS is not from today. Confirming files it on ${day}.`,
+    notToday: (day: string) =>
+      `This SMS is not from today. Confirming files it on ${day}.`,
   },
   toast: {
     saved: "Saved",
     deleted: "Deleted",
     full: "Cookie storage is full. Download a backup in Settings and remove old entries.",
-    portfolioNew: "Savings is in the app — cash, gold, USD, and Tether with live prices. Tap to open.",
+    portfolioNew:
+      "Savings is in the app — cash, gold, USD, and Tether with live prices. Tap to open.",
   },
   categories: {
     food: "Eating out",
