@@ -413,6 +413,7 @@ const fa = {
     saved: "ذخیره شد",
     deleted: "حذف شد",
     full: "فضای کوکی پر شده است. از تنظیمات پشتیبان بگیرید و موارد قدیمی را پاک کنید.",
+    portfolioNew: "بخش پس‌انداز اضافه شد — نقد، طلا و دلار با قیمت زنده. بزنید تا ببینید.",
   },
   categories: {
     food: "رستوران و کافه",
@@ -853,6 +854,7 @@ const en: Dictionary = {
     saved: "Saved",
     deleted: "Deleted",
     full: "Cookie storage is full. Download a backup in Settings and remove old entries.",
+    portfolioNew: "Savings is in the app — cash, gold, and USD with live prices. Tap to open.",
   },
   categories: {
     food: "Eating out",

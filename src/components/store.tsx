@@ -70,7 +70,12 @@ export type CategoryReturn = {
   sheet: Extract<Sheet, { type: "tx" }>;
 };
 
-type Toast = { id: number; message: string; tone: "neutral" | "error" };
+type Toast = {
+  id: number;
+  message: string;
+  tone: "neutral" | "error" | "announce";
+  href?: string;
+};
 
 /** How long the app must have been in the background before it asks about the clipboard again. */
 const AWAY_BEFORE_ASKING = 20_000;
@@ -97,7 +102,7 @@ type StoreValue = {
   setSelectedDay: (day: DayKey) => void;
   openSheet: (sheet: Sheet) => void;
   closeSheet: () => void;
-  notify: (message: string, tone?: Toast["tone"]) => void;
+  notify: (message: string, tone?: Toast["tone"], href?: string) => void;
   dismissToast: () => void;
   saveTransaction: (tx: Transaction) => boolean;
   saveTransactionsBatch: (txs: Transaction[], message?: string) => boolean;
@@ -185,9 +190,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     else root.dataset.theme = settings.theme;
   }, [settings.theme]);
 
-  const notify = useCallback((message: string, tone: Toast["tone"] = "neutral") => {
+  const notify = useCallback((message: string, tone: Toast["tone"] = "neutral", href?: string) => {
     toastId.current += 1;
-    setToast({ id: toastId.current, message, tone });
+    setToast({ id: toastId.current, message, tone, href });
   }, []);
 
   const commit = useCallback(
@@ -367,6 +372,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     notify(t.confirmSms.rejected);
   }, [notify, t]);
 
+  const closeSheet = useCallback(() => setSheet(null), []);
+
   const beginCategoryReturn = useCallback((value: CategoryReturn) => {
     setCategoryReturn(value);
     setSheet(null);
@@ -480,7 +487,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       },
       setSelectedDay,
       openSheet: setSheet,
-      closeSheet: () => setSheet(null),
+      closeSheet,
       notify,
       dismissToast: () => setToast(null),
       saveTransaction,
@@ -507,6 +514,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateSettings,
       commit,
       notify,
+      closeSheet,
       saveTransaction,
       saveTransactionsBatch,
       deleteTransaction,

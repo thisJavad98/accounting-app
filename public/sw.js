@@ -1,5 +1,5 @@
 // Network-first for pages, cache-first for static assets. Data lives in cookies, not here.
-const CACHE = "dakhl-v5";
+const CACHE = "dakhl-v6";
 const SHELL = [
   "/app",
   "/app/month",
@@ -92,4 +92,20 @@ self.addEventListener("fetch", (event) => {
 
   const key = cacheKey(request, url);
   event.respondWith(isStaticAsset(url) ? cacheFirst(request, key) : networkFirst(request, key, url));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || "/app/reports/savings";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          if ("navigate" in client) client.navigate(target);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    }),
+  );
 });

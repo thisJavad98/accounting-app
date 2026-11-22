@@ -203,11 +203,12 @@ export function DayView() {
               opacity: { duration: 0.2 },
             }}
             drag="x"
+            dragDirectionLock
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.22}
             dragMomentum={false}
             onDragEnd={onSwipe}
-            className="flex flex-col gap-7"
+            className="flex flex-col gap-7 touch-pan-y"
           >
             <section className="flex flex-col gap-2">
               <h1 className="text-sm font-medium text-muted">

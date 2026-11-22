@@ -6,6 +6,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { Sheets } from "@/components/sheets";
 import { StoreProvider } from "@/components/store";
 import { ToastViewport } from "@/components/toast";
+import { WhatsNew } from "@/components/whats-new";
 
 export const metadata: Metadata = { title: "دخل | Dakhl" };
 
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
           <BottomNav />
           <Sheets />
           <ToastViewport />
+          <WhatsNew />
         </StoreProvider>
       </Suspense>
     </div>

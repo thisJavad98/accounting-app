@@ -2,7 +2,8 @@
 
 import { X } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useId } from "react";
+import { useEffect, useId, useRef } from "react";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 import { useStore } from "./store";
 
 export function Sheet({
@@ -19,19 +20,22 @@ export function Sheet({
   const { t } = useStore();
   const reduce = useReducedMotion();
   const titleId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
+  // Lock once per mounted Sheet (including AnimatePresence exit). Do not depend
+  // on onClose — a changing callback would unlock/relock and fight overlapping sheets.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = previous;
+      unlockBodyScroll();
       window.removeEventListener("keydown", onKey);
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center">
