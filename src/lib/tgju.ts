@@ -23,7 +23,7 @@ export type LivePriceItem = {
   updatedAt: string | null;
 };
 
-export type TickerId = "gold18" | "usd" | "coin" | "mesghal" | "ounce";
+export type TickerId = "gold18" | "usd" | "usdt" | "coin" | "mesghal" | "ounce";
 
 export type TickerEntry = {
   id: TickerId;
@@ -35,12 +35,16 @@ export type TickerEntry = {
 export type LivePrices = {
   /** USD free-market rate in the app currency unit (IRT/IRR). */
   usd: number;
+  /** Tether (USDT) IRR market rate in the app currency unit. Source: crypto-tether-irr. */
+  usdt: number;
   /** 18k gold price per gram (= 1000 soot) in the app currency unit. */
   gold18: number;
   usdItem: LivePriceItem;
+  usdtItem: LivePriceItem;
   gold18Item: LivePriceItem;
   ticker: TickerEntry[];
   usdUpdatedAt: string | null;
+  usdtUpdatedAt: string | null;
   goldUpdatedAt: string | null;
   fetchedAt: number;
 };
@@ -100,6 +104,8 @@ const TICKER_KEYS: { id: TickerId; key: string; format: "app" | "usd" }[] = [
   { id: "gold18", key: "geram18", format: "app" },
   { id: "coin", key: "sekee", format: "app" },
   { id: "usd", key: "price_dollar_rl", format: "app" },
+  /** Rial USDT quote from https://www.tgju.org/profile/crypto-tether */
+  { id: "usdt", key: "crypto-tether-irr", format: "app" },
   { id: "mesghal", key: "mesghal", format: "app" },
   { id: "ounce", key: "ons", format: "usd" },
 ];
@@ -113,8 +119,9 @@ export function extractTgjuPrices(
   if (!current || typeof current !== "object") return null;
 
   const usdItem = toItem(current.price_dollar_rl, currency, "app");
+  const usdtItem = toItem(current["crypto-tether-irr"], currency, "app");
   const gold18Item = toItem(current.geram18, currency, "app");
-  if (!usdItem || !gold18Item) return null;
+  if (!usdItem || !usdtItem || !gold18Item) return null;
 
   const ticker: TickerEntry[] = [];
   for (const row of TICKER_KEYS) {
@@ -124,14 +131,18 @@ export function extractTgjuPrices(
 
   return {
     usd: usdItem.value,
+    usdt: usdtItem.value,
     gold18: gold18Item.value,
     usdItem,
+    usdtItem,
     gold18Item,
     ticker: ticker.length > 0 ? ticker : [
       { id: "gold18", item: gold18Item, format: "app" },
       { id: "usd", item: usdItem, format: "app" },
+      { id: "usdt", item: usdtItem, format: "app" },
     ],
     usdUpdatedAt: usdItem.updatedAt,
+    usdtUpdatedAt: usdtItem.updatedAt,
     goldUpdatedAt: gold18Item.updatedAt,
   };
 }

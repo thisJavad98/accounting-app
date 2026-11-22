@@ -1,5 +1,5 @@
 import { deflateSync, inflateSync } from "fflate";
-import type { CategoryId, Currency, Locale, Settings, Theme, Transaction, TxKind } from "./types";
+import type { Currency, Locale, Settings, Theme, Transaction, TxKind } from "./types";
 import {
   isBuiltinCategory,
   isCustomCategoryId,

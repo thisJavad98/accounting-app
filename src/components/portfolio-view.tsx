@@ -4,6 +4,7 @@ import {
   CaretLeft,
   CaretRight,
   Coins,
+  CurrencyCircleDollar,
   CurrencyDollar,
   PiggyBank,
   Plus,
@@ -13,7 +14,7 @@ import {
   Wallet,
 } from "@phosphor-icons/react";
 import { AnimatePresence } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { AppLink } from "./app-link";
 import { LiveMarketTicker } from "./live-market-ticker";
 import { Money } from "./money";
@@ -38,13 +39,19 @@ import {
   buildCashHolding,
   buildGoldFromGrams,
   buildUsdHolding,
+  buildUsdtHolding,
   gramsToSoot,
   sootToGrams,
   summarizePortfolio,
   type PortfolioHolding,
   type PortfolioKind,
 } from "@/lib/portfolio";
-import { loadPortfolio, savePortfolio } from "@/lib/portfolio-store";
+import {
+  getPortfolioServerSnapshot,
+  getPortfolioSnapshot,
+  savePortfolio,
+  subscribePortfolio,
+} from "@/lib/portfolio-store";
 import { useLivePrices } from "@/lib/use-live-prices";
 import type { LivePrices } from "@/lib/tgju";
 import type { Locale } from "@/lib/types";
@@ -55,6 +62,7 @@ const kindIcons = {
   cash: Wallet,
   gold: Coins,
   usd: CurrencyDollar,
+  usdt: CurrencyCircleDollar,
 } as const;
 
 function formatGoldNumber(
@@ -92,6 +100,8 @@ function AddPortfolioSheet({
   const [cashText, setCashText] = useState("");
   const [usdText, setUsdText] = useState("");
   const [usdRateText, setUsdRateText] = useState("");
+  const [usdtText, setUsdtText] = useState("");
+  const [usdtRateText, setUsdtRateText] = useState("");
   const [gramsText, setGramsText] = useState("");
   const [sootText, setSootText] = useState("");
   const [goldRateText, setGoldRateText] = useState("");
@@ -208,6 +218,25 @@ function AddPortfolioSheet({
         note: noteValue,
       });
       holding.costBasis = roundMoney(holding.costBasis, currency);
+    } else if (kind === "usdt") {
+      const usdtAmount = parseAmount(usdtText);
+      if (usdtAmount <= 0) {
+        notify(t.portfolio.invalidAmount, "error");
+        return;
+      }
+      const liveRate = roundMoney(prices?.usdt ?? 0, currency);
+      const buyRate = parseMoney(usdtRateText, currency) || liveRate;
+      if (buyRate <= 0) {
+        notify(t.portfolio.invalidAmount, "error");
+        return;
+      }
+      holding = buildUsdtHolding({
+        id,
+        usdtAmount,
+        buyRate,
+        note: noteValue,
+      });
+      holding.costBasis = roundMoney(holding.costBasis, currency);
     } else {
       // 1000 soot = 1g of 18k = TGJU geram18.
       const livePerGram = liveGoldPerGram();
@@ -319,6 +348,36 @@ function AddPortfolioSheet({
           </>
         )}
 
+        {kind === "usdt" && (
+          <>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-muted">{t.portfolio.usdtAmount}</span>
+              <input
+                inputMode="decimal"
+                className={inputClass}
+                value={usdtText}
+                onChange={(e) => setUsdtText(formatAmountInput(e.target.value, locale))}
+                autoFocus
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-muted">{t.portfolio.usdtBuyRate}</span>
+              <input
+                inputMode="decimal"
+                className={inputClass}
+                value={usdtRateText}
+                placeholder={
+                  prices ? formatAppMoney(prices.usdt, locale, currency) : undefined
+                }
+                onChange={(e) =>
+                  setUsdtRateText(formatMoneyInput(e.target.value, locale, currency))
+                }
+              />
+              <span className="text-[11px] text-muted">{t.portfolio.usdtBuyRateHint}</span>
+            </label>
+          </>
+        )}
+
         {kind === "gold" && (
           <>
             <div className="flex flex-wrap gap-2">
@@ -421,15 +480,18 @@ export function PortfolioView() {
   const locale = settings.locale;
   const BackChevron = locale === "fa" ? CaretRight : CaretLeft;
 
-  const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const holdings = useSyncExternalStore(
+    subscribePortfolio,
+    getPortfolioSnapshot,
+    getPortfolioServerSnapshot,
+  );
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [addOpen, setAddOpen] = useState(false);
   const { prices } = useLivePrices(settings.currency);
-
-  useEffect(() => {
-    setHoldings(loadPortfolio());
-    setHydrated(true);
-  }, []);
 
   const persist = useCallback(
     (next: PortfolioHolding[]) => {
@@ -438,7 +500,6 @@ export function PortfolioView() {
         notify(t.portfolio.fullToast, "error");
         return false;
       }
-      setHoldings(next);
       return true;
     },
     [notify, t.portfolio.fullToast],
@@ -569,6 +630,8 @@ export function PortfolioView() {
                           )}
                           {holding.kind === "usd" &&
                             t.portfolio.usdLabel(formatNumber(holding.quantity, locale))}
+                          {holding.kind === "usdt" &&
+                            t.portfolio.usdtLabel(formatNumber(holding.quantity, locale))}
                           {holding.kind === "gold" && (
                             <>
                               {t.portfolio.sootLabel(

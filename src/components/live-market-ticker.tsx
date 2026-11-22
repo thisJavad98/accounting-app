@@ -67,6 +67,7 @@ export function LiveMarketTicker() {
     () => ({
       gold18: t.ticker.gold18,
       usd: t.ticker.usd,
+      usdt: t.ticker.usdt,
       coin: t.ticker.coin,
       mesghal: t.ticker.mesghal,
       ounce: t.ticker.ounce,

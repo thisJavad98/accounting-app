@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowsClockwise, CaretLeft, CaretRight, Coins, CurrencyDollar, TrendDown, TrendUp } from "@phosphor-icons/react";
+import {
+  ArrowsClockwise,
+  CaretLeft,
+  CaretRight,
+  Coins,
+  CurrencyCircleDollar,
+  CurrencyDollar,
+  TrendDown,
+  TrendUp,
+} from "@phosphor-icons/react";
 import { AppLink } from "./app-link";
 import { Money } from "./money";
 import { useStore } from "./store";
@@ -117,6 +126,13 @@ export function PricesView() {
             title={t.prices.usd}
             icon={CurrencyDollar}
             item={prices.usdItem}
+            locale={locale}
+            updatedLabel={t.prices.updatedAt}
+          />
+          <DetailCard
+            title={t.prices.usdt}
+            icon={CurrencyCircleDollar}
+            item={prices.usdtItem}
             locale={locale}
             updatedLabel={t.prices.updatedAt}
           />

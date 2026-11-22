@@ -7,6 +7,7 @@ import {
   ChartLineUp,
   ChatText,
   Coins,
+  CurrencyCircleDollar,
   CurrencyDollar,
   NotePencil,
   PiggyBank,
@@ -308,6 +309,7 @@ export function PortfolioShowcase({ copy, locale }: { copy: LandingCopy; locale:
   const kindIcon = {
     gold: Coins,
     usd: CurrencyDollar,
+    usdt: CurrencyCircleDollar,
     cash: Wallet,
   } as const;
 

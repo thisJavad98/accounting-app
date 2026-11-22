@@ -1,31 +1,29 @@
 "use client";
 
 import { CaretLeft, CaretRight, PiggyBank, TrendDown, TrendUp } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { AppLink } from "./app-link";
 import { Money } from "./money";
 import { useStore } from "./store";
 import { formatNumber } from "@/lib/format";
-import { summarizePortfolio, type PortfolioHolding } from "@/lib/portfolio";
-import { loadPortfolio } from "@/lib/portfolio-store";
+import { summarizePortfolio } from "@/lib/portfolio";
+import {
+  getPortfolioServerSnapshot,
+  getPortfolioSnapshot,
+  subscribePortfolio,
+} from "@/lib/portfolio-store";
 import { useLivePrices } from "@/lib/use-live-prices";
 
 export function DailyPortfolioCard() {
   const { t, settings } = useStore();
   const locale = settings.locale;
   const Chevron = locale === "fa" ? CaretLeft : CaretRight;
-  const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
+  const holdings = useSyncExternalStore(
+    subscribePortfolio,
+    getPortfolioSnapshot,
+    getPortfolioServerSnapshot,
+  );
   const { prices } = useLivePrices(settings.currency);
-
-  useEffect(() => {
-    setHoldings(loadPortfolio());
-
-    function onFocus() {
-      setHoldings(loadPortfolio());
-    }
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, []);
 
   const summary = useMemo(() => summarizePortfolio(holdings, prices), [holdings, prices]);
   const hasHoldings = holdings.length > 0;

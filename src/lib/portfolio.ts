@@ -1,6 +1,6 @@
 import type { LivePrices } from "./tgju";
 
-export type PortfolioKind = "cash" | "gold" | "usd";
+export type PortfolioKind = "cash" | "gold" | "usd" | "usdt";
 
 /**
  * User baseline: 1000 soot of 18k gold = 1 gram = TGJU `geram18` price.
@@ -11,13 +11,13 @@ export const GOLD_SOOT_PER_GRAM = 1000;
 export type PortfolioHolding = {
   id: string;
   kind: PortfolioKind;
-  /** cash: amount in app currency | usd: USD count | gold: grams */
+  /** cash: amount in app currency | usd/usdt: unit count | gold: grams */
   quantity: number;
   /** Gold quantity in soot (1000 soot = 1g). Display / input unit. */
   soot?: number;
   /** Purchase cost in the app currency unit. */
   costBasis: number;
-  /** Unit price at buy: per USD, or per gram at the holding's soot. */
+  /** Unit price at buy: per USD/USDT, or per gram at the holding's soot. */
   buyUnitPrice?: number;
   at: number;
   note?: string;
@@ -49,7 +49,7 @@ export function gramsToSoot(grams: number): number {
 }
 
 /** Market price of one gram of 18k gold (= 1000 soot) from TGJU. */
-export function goldGramPrice(gold18: number, _soot?: number): number {
+export function goldGramPrice(gold18: number): number {
   return gold18;
 }
 
@@ -59,6 +59,10 @@ export function holdingValue(holding: PortfolioHolding, prices: LivePrices | nul
 
   if (holding.kind === "usd") {
     return Math.round(holding.quantity * prices.usd);
+  }
+
+  if (holding.kind === "usdt") {
+    return Math.round(holding.quantity * prices.usdt);
   }
 
   // gold: quantity is grams; 1g = site geram18 price (toman/rial → whole)
@@ -142,6 +146,24 @@ export function buildUsdHolding(input: {
     kind: "usd",
     quantity: input.usdAmount,
     costBasis: input.usdAmount * input.buyRate,
+    buyUnitPrice: input.buyRate,
+    at: input.at ?? Date.now(),
+    note: input.note,
+  };
+}
+
+export function buildUsdtHolding(input: {
+  id: string;
+  usdtAmount: number;
+  buyRate: number;
+  at?: number;
+  note?: string;
+}): PortfolioHolding {
+  return {
+    id: input.id,
+    kind: "usdt",
+    quantity: input.usdtAmount,
+    costBasis: input.usdtAmount * input.buyRate,
     buyUnitPrice: input.buyRate,
     at: input.at ?? Date.now(),
     note: input.note,

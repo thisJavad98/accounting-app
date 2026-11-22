@@ -12,7 +12,7 @@ const MAX_BYTES = 3500;
 
 type HoldingTuple = [
   string,
-  0 | 1 | 2,
+  0 | 1 | 2 | 3,
   number,
   number,
   number,
@@ -21,11 +21,21 @@ type HoldingTuple = [
   string?,
 ];
 
-const KIND_CODES = { cash: 0, gold: 1, usd: 2 } as const satisfies Record<PortfolioKind, number>;
+const KIND_CODES = { cash: 0, gold: 1, usd: 2, usdt: 3 } as const satisfies Record<
+  PortfolioKind,
+  number
+>;
+
+const EMPTY: PortfolioHolding[] = [];
+const listeners = new Set<() => void>();
+
+let cachedCookie: string | null | undefined;
+let cachedHoldings: PortfolioHolding[] = EMPTY;
 
 function kindFromCode(code: unknown): PortfolioKind {
   if (code === 1 || code === "gold") return "gold";
   if (code === 2 || code === "usd") return "usd";
+  if (code === 3 || code === "usdt") return "usdt";
   return "cash";
 }
 
@@ -58,7 +68,7 @@ function decode(payload: string): string {
   const compressed = payload.startsWith(COMPRESSED);
   const binary = atob(compressed ? payload.slice(COMPRESSED.length) : payload);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = binary.charCodeAt(i);
   return new TextDecoder().decode(compressed ? inflateSync(bytes) : bytes);
 }
 
@@ -101,27 +111,68 @@ function fromTuple(raw: unknown): PortfolioHolding | null {
   return holding;
 }
 
+function parsePayload(payload: string | null): PortfolioHolding[] {
+  if (!payload) return EMPTY;
+  try {
+    const tuples: unknown = JSON.parse(decode(payload));
+    if (!Array.isArray(tuples)) return EMPTY;
+    const next = tuples.map(fromTuple).filter((h): h is PortfolioHolding => h !== null);
+    return next.length > 0 ? next : EMPTY;
+  } catch {
+    return EMPTY;
+  }
+}
+
+function invalidateCache() {
+  cachedCookie = undefined;
+}
+
+function emit() {
+  invalidateCache();
+  listeners.forEach((listener) => listener());
+}
+
 export type PortfolioSaveResult = { ok: true } | { ok: false; reason: "full" };
 
-export function loadPortfolio(): PortfolioHolding[] {
-  try {
-    const payload = readCookie(COOKIE);
-    if (!payload) return [];
-    const tuples: unknown = JSON.parse(decode(payload));
-    if (!Array.isArray(tuples)) return [];
-    return tuples.map(fromTuple).filter((h): h is PortfolioHolding => h !== null);
-  } catch {
-    return [];
+/** Stable client snapshot for `useSyncExternalStore`. */
+export function getPortfolioSnapshot(): PortfolioHolding[] {
+  const payload = readCookie(COOKIE);
+  if (payload === cachedCookie) return cachedHoldings;
+  cachedCookie = payload;
+  cachedHoldings = parsePayload(payload);
+  return cachedHoldings;
+}
+
+export function getPortfolioServerSnapshot(): PortfolioHolding[] {
+  return EMPTY;
+}
+
+export function subscribePortfolio(listener: () => void) {
+  listeners.add(listener);
+  if (typeof window !== "undefined") {
+    window.addEventListener("focus", listener);
   }
+  return () => {
+    listeners.delete(listener);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("focus", listener);
+    }
+  };
+}
+
+export function loadPortfolio(): PortfolioHolding[] {
+  return getPortfolioSnapshot().slice();
 }
 
 export function savePortfolio(holdings: PortfolioHolding[]): PortfolioSaveResult {
   const payload = encode(JSON.stringify(holdings.map(toTuple)));
   if (payload.length > MAX_BYTES) return { ok: false, reason: "full" };
   writeCookie(COOKIE, payload);
+  emit();
   return { ok: true };
 }
 
 export function clearPortfolio() {
   writeCookie(COOKIE, "", 0);
+  emit();
 }

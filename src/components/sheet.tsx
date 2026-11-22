@@ -21,7 +21,10 @@ export function Sheet({
   const reduce = useReducedMotion();
   const titleId = useId();
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Lock once per mounted Sheet (including AnimatePresence exit). Do not depend
   // on onClose — a changing callback would unlock/relock and fight overlapping sheets.

@@ -9,7 +9,7 @@ const fa = {
   switchTo: "English",
   hero: {
     title: "پیامک بانک می‌آید، حساب‌تان مرتب می‌شود.",
-    body: "دخل پیامک بانک را می‌خواند، خرج‌ها را مرتب می‌کند، پس‌انداز نقد و طلا و دلار را با قیمت زنده بازار می‌سنجد و آخر ماه نشان می‌دهد چقدر از حقوق‌تان را می‌توانید نگه دارید.",
+    body: "دخل پیامک بانک را می‌خواند، خرج‌ها را مرتب می‌کند، پس‌انداز نقد و طلا و دلار و تتر را با قیمت زنده بازار می‌سنجد و آخر ماه نشان می‌دهد چقدر از حقوق‌تان را می‌توانید نگه دارید.",
     notification: { from: "بلو", text: "برداشت ۲,۶۰۰,۰۰۰ ریال از حساب شما" },
   },
   story: {
@@ -43,8 +43,8 @@ const fa = {
       body: "ورودی حقوق و خریدهای ماه را کنار هم ببینید، خریدهای غیرضروری را خط بزنید و مبلغ قابل پس‌انداز را بسنجید.",
     },
     portfolio: {
-      title: "پس‌انداز نقد، طلا و دلار",
-      body: "موجودی پس‌انداز را نگه دارید و سود و زیان را نسبت به قیمت لحظه‌ای طلا و دلار ببینید.",
+      title: "پس‌انداز نقد، طلا، دلار و تتر",
+      body: "موجودی پس‌انداز را نگه دارید و سود و زیان را نسبت به قیمت لحظه‌ای طلا، دلار و تتر ببینید.",
     },
     ask: { title: "می‌پرسد چرا", body: "هر پیامک یک پنجره باز می‌کند تا عنوان و دلیل پرداخت را بنویسید." },
     privacy: { suffix: "٪", title: "در مرورگر خودتان", body: "بدون حساب کاربری و بدون سرور. فقط کوکی." },
@@ -53,11 +53,11 @@ const fa = {
   },
   portfolio: {
     eyebrow: "جدید · پس‌انداز و قیمت زنده بازار",
-    title: "نقد، طلا یا دلار؛ ارزش امروز و سود و زیان‌تان را ببینید.",
-    body: "پس‌انداز را با سوت و گرم طلا، تعداد دلار یا مبلغ نقد ثبت کنید. نوار قیمت زنده طلا، سکه و دلار مثل تابلوی بازار بالای صفحه می‌لغزد و ارزش و درصد سود یا زیان را لحظه‌ای نشان می‌دهد.",
+    title: "نقد، طلا، دلار یا تتر؛ ارزش امروز و سود و زیان‌تان را ببینید.",
+    body: "پس‌انداز را با سوت و گرم طلا، تعداد دلار یا تتر یا مبلغ نقد ثبت کنید. نوار قیمت زنده طلا، سکه، دلار و تتر مثل تابلوی بازار بالای صفحه می‌لغزد و ارزش و درصد سود یا زیان را لحظه‌ای نشان می‌دهد.",
     cta: "رفتن به پس‌انداز",
     tickerBadge: "زنده",
-    tickerTitle: "قیمت زنده طلا، سکه، دلار و ارز",
+    tickerTitle: "قیمت زنده طلا، سکه، دلار، تتر و ارز",
     holdingsTitle: "پس‌انداز شما",
     valueToday: "ارزش امروز",
     profitLoss: "سود / زیان",
@@ -78,6 +78,13 @@ const fa = {
         value: 5_400_000,
       },
       {
+        kind: "usdt" as const,
+        title: "تتر",
+        detail: "۵۰ تتر",
+        cost: 12_500_000,
+        value: 13_550_000,
+      },
+      {
         kind: "cash" as const,
         title: "نقد",
         detail: "پس‌انداز نقدی",
@@ -89,6 +96,7 @@ const fa = {
       { label: "طلا ۱۸", value: "۲۳,۰۷۰,۰۰۰", change: "۵٫۳٪", up: false },
       { label: "سکه", value: "۲۳۸,۳۹۰,۰۰۰", change: "۴٫۷٪", up: false },
       { label: "دلار", value: "۲۶۹,۹۷۰", change: "۰٫۲٪", up: true },
+      { label: "تتر", value: "۲۷۱,۲۷۴", change: "۰٫۴٪", up: false },
       { label: "مثقال طلا", value: "۹۹,۹۵۳,۰۰۰", change: "۵٫۳٪", up: false },
       { label: "انس طلا", value: "۳,۵۳۵", change: "۰٫۵٪", up: true },
     ],
@@ -137,7 +145,7 @@ const fa = {
     items: [
       { title: "بفرستید", body: "پیامک بانک را کپی کنید یا مستقیم با برنامه به اشتراک بگذارید. مبلغ، بانک و تاریخ خودکار پر می‌شود." },
       { title: "بنویسید", body: "یک عنوان کوتاه و دلیل پرداخت بنویسید. پیشنهادها از خرج‌های قبلی خودتان می‌آیند." },
-      { title: "پس‌انداز کنید", body: "خرج‌های غیرضروری را کم کنید، نقد و طلا و دلار را ثبت کنید و با قیمت زنده بازار سود و زیان‌تان را ببینید." },
+      { title: "پس‌انداز کنید", body: "خرج‌های غیرضروری را کم کنید، نقد و طلا و دلار و تتر را ثبت کنید و با قیمت زنده بازار سود و زیان‌تان را ببینید." },
     ],
   },
   final: { title: "از همین پیامک بعدی شروع کنید.", body: "رایگان، بدون ثبت‌نام؛ خرج‌ها و پس‌انداز روی همین گوشی." },
@@ -153,7 +161,7 @@ const en: LandingCopy = {
   switchTo: "فارسی",
   hero: {
     title: "Your bank texts you. Your books update.",
-    body: "Dakhl reads each bank SMS, organizes spending, tracks cash, gold, and dollar savings against live market prices, and helps you keep more of your salary at month-end.",
+    body: "Dakhl reads each bank SMS, organizes spending, tracks cash, gold, dollar, and Tether savings against live market prices, and helps you keep more of your salary at month-end.",
     notification: { from: "Blu Bank", text: "IRR 2,600,000 debited from your account" },
   },
   story: {
@@ -187,8 +195,8 @@ const en: LandingCopy = {
       body: "Compare incoming salary with your buys, strike out unnecessary purchases, and see how much you can save.",
     },
     portfolio: {
-      title: "Cash, gold & dollar savings",
-      body: "Hold your savings and see profit or loss against live gold and dollar prices.",
+      title: "Cash, gold, dollar & Tether savings",
+      body: "Hold your savings and see profit or loss against live gold, dollar, and Tether prices.",
     },
     ask: { title: "It asks why", body: "Every SMS opens a sheet for a title and the reason you paid." },
     privacy: { suffix: "%", title: "in your own browser", body: "No account, no server. Just cookies." },
@@ -197,11 +205,11 @@ const en: LandingCopy = {
   },
   portfolio: {
     eyebrow: "New · Savings & live market prices",
-    title: "Cash, gold, or dollars — see today’s value and your P/L.",
-    body: "Log savings in gold soot/grams, USD amount, or cash. A live ticker for gold, coin, and dollar slides across the top, and you see value plus profit or loss in the moment.",
+    title: "Cash, gold, dollars, or Tether — see today’s value and your P/L.",
+    body: "Log savings in gold soot/grams, USD, Tether, or cash. A live ticker for gold, coin, dollar, and USDT slides across the top, and you see value plus profit or loss in the moment.",
     cta: "Open savings",
     tickerBadge: "LIVE",
-    tickerTitle: "Live gold, coin, dollar & FX",
+    tickerTitle: "Live gold, coin, dollar, Tether & FX",
     holdingsTitle: "Your savings",
     valueToday: "Today’s value",
     profitLoss: "Profit / loss",
@@ -222,6 +230,13 @@ const en: LandingCopy = {
         value: 5_400_000,
       },
       {
+        kind: "usdt" as const,
+        title: "Tether",
+        detail: "50 USDT",
+        cost: 12_500_000,
+        value: 13_550_000,
+      },
+      {
         kind: "cash" as const,
         title: "Cash",
         detail: "Cash savings",
@@ -233,6 +248,7 @@ const en: LandingCopy = {
       { label: "18k gold", value: "23,070,000", change: "5.3%", up: false },
       { label: "Coin", value: "238,390,000", change: "4.7%", up: false },
       { label: "USD", value: "269,970", change: "0.2%", up: true },
+      { label: "USDT", value: "271,274", change: "0.4%", up: false },
       { label: "Mesghal", value: "99,953,000", change: "5.3%", up: false },
       { label: "Gold ounce", value: "3,535", change: "0.5%", up: true },
     ],
@@ -281,7 +297,7 @@ const en: LandingCopy = {
     items: [
       { title: "Share", body: "Copy a bank SMS or share it straight to the app. Amount, bank and date fill in by themselves." },
       { title: "Note", body: "Add a short title and why you paid. Suggestions come from your own past entries." },
-      { title: "Save", body: "Cut unnecessary buys, log cash, gold, and dollars, and track P/L against live market prices." },
+      { title: "Save", body: "Cut unnecessary buys, log cash, gold, dollars, and Tether, and track P/L against live market prices." },
     ],
   },
   final: { title: "Start with your next bank SMS.", body: "Free, no sign-up — spending and savings on this phone." },

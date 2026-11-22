@@ -6,6 +6,7 @@ import {
   buildGoldFromAmount,
   buildGoldFromGrams,
   buildUsdHolding,
+  buildUsdtHolding,
   goldGramPrice,
   sootToGrams,
   summarizePortfolio,
@@ -14,9 +15,17 @@ import type { LivePrices } from "./tgju";
 
 const prices: LivePrices = {
   usd: 300_000,
+  usdt: 271_000,
   gold18: 20_000_000,
   usdItem: {
     value: 300_000,
+    change: 0,
+    changePct: 0,
+    direction: "flat",
+    updatedAt: null,
+  },
+  usdtItem: {
+    value: 271_000,
     change: 0,
     changePct: 0,
     direction: "flat",
@@ -52,8 +61,20 @@ const prices: LivePrices = {
       },
       format: "app",
     },
+    {
+      id: "usdt",
+      item: {
+        value: 271_000,
+        change: 0,
+        changePct: 0,
+        direction: "flat",
+        updatedAt: null,
+      },
+      format: "app",
+    },
   ],
   usdUpdatedAt: null,
+  usdtUpdatedAt: null,
   goldUpdatedAt: null,
   fetchedAt: Date.now(),
 };
@@ -73,6 +94,14 @@ describe("portfolio valuation", () => {
     assert.equal(summary.totalValue, 6_000_000);
     assert.equal(summary.totalProfit, 2_000_000);
     assert.equal(summary.totalProfitPct, 50);
+  });
+
+  it("values USDT (Tether) against live TGJU rate and buy basis", () => {
+    const holding = buildUsdtHolding({ id: "t1", usdtAmount: 10, buyRate: 250_000 });
+    const summary = summarizePortfolio([holding], prices);
+    assert.equal(holding.costBasis, 2_500_000);
+    assert.equal(summary.totalValue, 2_710_000);
+    assert.equal(summary.totalProfit, 210_000);
   });
 
   it("treats 1000 soot as 1g at the TGJU 18k quote", () => {
