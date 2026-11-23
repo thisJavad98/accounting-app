@@ -113,18 +113,23 @@ const TICKER_KEYS: { id: TickerId; key: string; format: "app" | "usd" }[] = [
 export function extractTgjuPrices(
   feed: unknown,
   currency: Currency,
-): Omit<LivePrices, "fetchedAt"> | null {
+): Omit<LivePrices, "fetchedAt" | "gold18" | "gold18Item" | "goldUpdatedAt"> & {
+  gold18Item: LivePriceItem | null;
+} | null {
   if (!feed || typeof feed !== "object") return null;
   const current = (feed as { current?: Record<string, TgjuQuote> }).current;
   if (!current || typeof current !== "object") return null;
 
   const usdItem = toItem(current.price_dollar_rl, currency, "app");
   const usdtItem = toItem(current["crypto-tether-irr"], currency, "app");
+  // Gold is preferably overridden by Bitaarts; TGJU geram18 is only a fallback.
   const gold18Item = toItem(current.geram18, currency, "app");
-  if (!usdItem || !usdtItem || !gold18Item) return null;
+  if (!usdItem || !usdtItem) return null;
 
   const ticker: TickerEntry[] = [];
   for (const row of TICKER_KEYS) {
+    // Skip TGJU gold in ticker; route merges Bitaarts (or TGJU fallback) gold separately.
+    if (row.id === "gold18") continue;
     const item = toItem(current[row.key], currency, row.format);
     if (item) ticker.push({ id: row.id, item, format: row.format });
   }
@@ -132,17 +137,26 @@ export function extractTgjuPrices(
   return {
     usd: usdItem.value,
     usdt: usdtItem.value,
-    gold18: gold18Item.value,
     usdItem,
     usdtItem,
     gold18Item,
-    ticker: ticker.length > 0 ? ticker : [
-      { id: "gold18", item: gold18Item, format: "app" },
-      { id: "usd", item: usdItem, format: "app" },
-      { id: "usdt", item: usdtItem, format: "app" },
-    ],
+    ticker:
+      ticker.length > 0
+        ? ticker
+        : [
+            { id: "usd", item: usdItem, format: "app" },
+            { id: "usdt", item: usdtItem, format: "app" },
+          ],
     usdUpdatedAt: usdItem.updatedAt,
     usdtUpdatedAt: usdtItem.updatedAt,
-    goldUpdatedAt: gold18Item.updatedAt,
   };
+}
+
+/** Put 18k gold first in the live ticker alongside the other quotes. */
+export function withGold18Ticker(
+  ticker: TickerEntry[],
+  gold18Item: LivePriceItem,
+): TickerEntry[] {
+  const rest = ticker.filter((entry) => entry.id !== "gold18");
+  return [{ id: "gold18", item: gold18Item, format: "app" }, ...rest];
 }

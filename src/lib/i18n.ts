@@ -173,7 +173,7 @@ const fa = {
     goldGramsHint:
       "با وارد کردن سوت خودکار تا ۳ رقم اعشار پر می‌شود (۱۰۰۰ سوت = ۱٫۰۰۰ گرم)",
     goldSoot: "مقدار سوت",
-    goldSootHint: "۱۰۰۰ سوت = ۱ گرم طلای ۱۸ عیار (همان قیمت سایت)",
+    goldSootHint: "۱۰۰۰ سوت = ۱ گرم طلای ۱۸ عیار (قیمت زنده Bitaarts)",
     goldBuyPerGram: "قیمت خرید هر گرم",
     goldBuyPerGramHint:
       "با وارد کردن سوت/گرم از قیمت سایت پر می‌شود؛ اگر خودتان عدد بگذارید، همان مبنا ذخیره می‌شود.",
@@ -204,7 +204,7 @@ const fa = {
     dayCardTitle: "پس‌انداز شما",
     dayCardEmpty: "پس‌اندازی ثبت نشده",
     dayCardAction: "مشاهده",
-    source: "منبع قیمت: TGJU",
+    source: "منبع: طلا Bitaarts · بقیه TGJU",
   },
   prices: {
     title: "قیمت طلا، دلار و تتر",
@@ -218,13 +218,13 @@ const fa = {
     unavailable: "دریافت قیمت ممکن نشد. دوباره تلاش کنید.",
     loading: "در حال بارگذاری قیمت‌ها…",
     openPortfolio: "رفتن به پس‌انداز",
-    source: "منبع: tgju.org",
+    source: "طلا: Bitaarts · بقیه: tgju.org",
   },
   liveMarket: {
     title: "قیمت زنده طلا، سکه، دلار، تتر و ارز",
     badge: "زنده",
     subtitle: "مانند تابلوی زنده بازار آزاد",
-    source: "منبع: tgju.org",
+    source: "طلا: Bitaarts · بقیه: tgju.org",
     openFull: "جزئیات بیشتر",
   },
   ticker: {
@@ -666,7 +666,7 @@ const en: Dictionary = {
     goldGrams: "Gold amount (grams)",
     goldGramsHint: "Auto-filled from soot to 3 decimals (1000 soot = 1.000g)",
     goldSoot: "Soot amount",
-    goldSootHint: "1000 soot = 1g of 18k gold (TGJU price)",
+    goldSootHint: "1000 soot = 1g of 18k gold (Bitaarts live price)",
     goldBuyPerGram: "Buy price per gram",
     goldBuyPerGramHint:
       "Auto-filled from the live site price; if you type a price, that becomes the saved basis.",
@@ -695,7 +695,7 @@ const en: Dictionary = {
     dayCardTitle: "Your savings",
     dayCardEmpty: "No savings yet — add from Reports",
     dayCardAction: "Open",
-    source: "Price source: TGJU",
+    source: "Source: gold Bitaarts · rest TGJU",
   },
   prices: {
     title: "Gold, dollar & Tether prices",
@@ -709,13 +709,13 @@ const en: Dictionary = {
     unavailable: "Could not load prices. Try again.",
     loading: "Loading prices…",
     openPortfolio: "Go to savings",
-    source: "Source: tgju.org",
+    source: "Gold: Bitaarts · rest: tgju.org",
   },
   liveMarket: {
     title: "Live gold, coin, dollar, Tether & FX",
     badge: "LIVE",
     subtitle: "Free-market live board",
-    source: "Source: tgju.org",
+    source: "Gold: Bitaarts · rest: tgju.org",
     openFull: "More details",
   },
   ticker: {

@@ -3,7 +3,7 @@ import type { LivePrices } from "./tgju";
 export type PortfolioKind = "cash" | "gold" | "usd" | "usdt";
 
 /**
- * User baseline: 1000 soot of 18k gold = 1 gram = TGJU `geram18` price.
+ * User baseline: 1000 soot of 18k gold = 1 gram = live 18k gold price (Bitaarts).
  * Soot is a quantity unit (not jeweler purity).
  */
 export const GOLD_SOOT_PER_GRAM = 1000;
@@ -48,7 +48,7 @@ export function gramsToSoot(grams: number): number {
   return grams * GOLD_SOOT_PER_GRAM;
 }
 
-/** Market price of one gram of 18k gold (= 1000 soot) from TGJU. */
+/** Market price of one gram of 18k gold (= 1000 soot). */
 export function goldGramPrice(gold18: number): number {
   return gold18;
 }
